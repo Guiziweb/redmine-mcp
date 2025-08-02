@@ -8,3 +8,136 @@
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
+
+###> IDE and Editor files ###
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+###< IDE and Editor files ###
+
+###> Logs and temporary files ###
+*.log
+*.tmp
+*.temp
+/logs/
+/tmp/
+###< Logs and temporary files ###
+
+###> Node modules and build files ###
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+###< Node modules and build files ###
+
+###> Cache and compiled files ###
+/cache/
+*.cache
+*.compiled
+###< Cache and compiled files ###
+
+###> Environment and configuration ###
+.env
+.env.prod
+.env.test
+.env.dev
+.env.local
+.env.*.local
+###< Environment and configuration ###
+
+###> Backup files ###
+*.bak
+*.backup
+*.old
+###< Backup files ###
+
+###> Test coverage ###
+/coverage/
+.phpunit.result.cache
+###< Test coverage ###
+
+###> friendsofphp/php-cs-fixer ###
+/.php-cs-fixer.php
+/.php-cs-fixer.cache
+###< friendsofphp/php-cs-fixer ###
+
+###> phpstan/phpstan ###
+phpstan.neon
+###< phpstan/phpstan ###
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
+
+###> Symfony specific ###
+/config/secrets/
+/public/bundles/
+/var/cache/
+/var/log/
+/var/sessions/
+###< Symfony specific ###
+
+###> Build and deployment ###
+/build/
+/dist/
+/.build/
+###< Build and deployment ###
+
+###> OS generated files ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+###< OS generated files ###
+
+###> Database ###
+*.sqlite
+*.sqlite3
+*.db
+###< Database ###
+
+###> SSL certificates ###
+*.pem
+*.key
+*.crt
+*.p12
+###< SSL certificates ###
+
+###> Composer ###
+composer.phar
+###< Composer ###
+
+###> PHP ###
+*.php~
+*.php.bak
+###< PHP ###
+
+###> Temporary files ###
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+###< Temporary files ###
+
+###> IDE specific ###
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+###< IDE specific ###
+
+###> Local configuration ###
+config/local/
+config/dev/
+###< Local configuration ###
