@@ -87,7 +87,7 @@ class RedmineToolsExposer
 
                 public function getOutputSchema(): ?array
                 {
-                    return null; // Pas de schéma de sortie pour éviter les erreurs
+                    return $this->dynamicTool->getOutputSchema();
                 }
 
                 public function getAnnotations(): ?ToolAnnotationsInterface
