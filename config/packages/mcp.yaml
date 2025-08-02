@@ -1,0 +1,8 @@
+
+mcp:
+    app: 'app' # Application name to be exposed to clients
+    version: '1.0.0' # Application version to be exposed to clients
+
+    client_transports:
+        stdio: true # Enable STDIO via command
+        sse: true # Enable STDIO via command
