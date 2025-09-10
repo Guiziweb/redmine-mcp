@@ -1,25 +1,38 @@
 {
+    "name": "guiziweb/mcp-redmine",
+    "description": "MCP (Model Context Protocol) server for Redmine integration with AI assistants like Claude Desktop",
     "type": "project",
-    "license": "proprietary",
+    "license": "MIT",
+    "keywords": ["mcp", "redmine", "claude", "ai", "assistant", "time-tracking", "project-management", "api", "symfony"],
+    "authors": [
+        {
+            "name": "Camille Islasse",
+            "email": "guiziweb@gmail.com"
+        }
+    ],
+    "homepage": "https://github.com/guiziweb/mcp-redmine",
+    "support": {
+        "issues": "https://github.com/guiziweb/mcp-redmine/issues",
+        "source": "https://github.com/guiziweb/mcp-redmine"
+    },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
         "php": ">=8.2",
         "ext-ctype": "*",
-        "ext-iconv": "*",
         "kbsali/redmine-api": "^2.8",
         "symfony/console": "7.3.*",
-        "symfony/dotenv": "7.3.*",
         "symfony/flex": "^2",
         "symfony/framework-bundle": "7.3.*",
         "symfony/mcp-bundle": "@dev",
         "symfony/monolog-bundle": "^3.10",
         "symfony/runtime": "7.3.*",
+        "symfony/validator": "7.3.*",
         "symfony/yaml": "7.3.*"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0",
-        "phpstan/phpstan": "^1.10",
+        "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^10.5"
     },
     "config": {
