@@ -25,11 +25,11 @@ class TimeEntryClient
         $activities = $data['time_entry_activities'] ?? [];
 
         // Return only essential fields to reduce payload with defensive mapping
-        return array_map(function($activity) {
+        return array_map(function ($activity) {
             return [
                 'id' => $activity['id'] ?? 0,
                 'name' => $activity['name'] ?? 'Unknown',
-                'active' => $activity['active'] ?? true
+                'active' => $activity['active'] ?? true,
             ];
         }, $activities);
     }
@@ -70,7 +70,7 @@ class TimeEntryClient
         $timeEntries = $result['time_entries'] ?? [];
 
         // Return only essential fields with defensive mapping
-        return array_map(function($timeEntry) {
+        return array_map(function ($timeEntry) {
             return [
                 'id' => $timeEntry['id'] ?? 0,
                 'hours' => (float) ($timeEntry['hours'] ?? 0),
@@ -78,22 +78,22 @@ class TimeEntryClient
                 'comments' => $timeEntry['comments'] ?? '',
                 'project' => isset($timeEntry['project']) ? [
                     'id' => $timeEntry['project']['id'] ?? 0,
-                    'name' => $timeEntry['project']['name'] ?? 'Unknown'
+                    'name' => $timeEntry['project']['name'] ?? 'Unknown',
                 ] : null,
                 'issue' => isset($timeEntry['issue']) ? [
                     'id' => $timeEntry['issue']['id'] ?? 0,
-                    'subject' => $timeEntry['issue']['subject'] ?? 'Unknown'
+                    'subject' => $timeEntry['issue']['subject'] ?? 'Unknown',
                 ] : null,
                 'activity' => isset($timeEntry['activity']) ? [
                     'id' => $timeEntry['activity']['id'] ?? 0,
-                    'name' => $timeEntry['activity']['name'] ?? 'Unknown'
+                    'name' => $timeEntry['activity']['name'] ?? 'Unknown',
                 ] : null,
                 'user' => isset($timeEntry['user']) ? [
                     'id' => $timeEntry['user']['id'] ?? 0,
-                    'name' => $timeEntry['user']['name'] ?? 'Unknown'
+                    'name' => $timeEntry['user']['name'] ?? 'Unknown',
                 ] : null,
                 'created_on' => $timeEntry['created_on'] ?? '',
-                'updated_on' => $timeEntry['updated_on'] ?? ''
+                'updated_on' => $timeEntry['updated_on'] ?? '',
             ];
         }, $timeEntries);
     }

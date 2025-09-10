@@ -36,7 +36,7 @@ final class SchemaGenerator
             'properties' => (object) $properties,
         ];
 
-        if (!empty($required)) {
+        if (! empty($required)) {
             $schema['required'] = $required;
         }
 
@@ -84,6 +84,7 @@ final class SchemaGenerator
             case $constraint instanceof Assert\NotNull:
             case $constraint instanceof Assert\NotBlank:
                 $required = true;
+
                 break;
 
             case $constraint instanceof Assert\Range:
@@ -93,6 +94,7 @@ final class SchemaGenerator
                 if (null !== $constraint->max) {
                     $schema['maximum'] = $constraint->max;
                 }
+
                 break;
 
             case $constraint instanceof Assert\Length:
@@ -102,14 +104,17 @@ final class SchemaGenerator
                 if (null !== $constraint->min) {
                     $schema['minLength'] = $constraint->min;
                 }
+
                 break;
 
             case $constraint instanceof Assert\Positive:
                 $schema['minimum'] = 0.1; // Assuming positive means > 0
+
                 break;
 
             case $constraint instanceof Assert\Date:
                 $schema['format'] = 'date';
+
                 break;
         }
     }

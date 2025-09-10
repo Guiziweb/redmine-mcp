@@ -51,6 +51,7 @@ final class ListIssuesTool extends AbstractMcpTool
     protected function execute(object $request): array
     {
         assert($request instanceof ListIssuesRequest);
+
         return $this->issueClient->getMyIssues($request->limit, $request->projectId);
     }
 }
