@@ -10,8 +10,10 @@ class RedmineService
     private NativeCurlClient $client;
 
     public function __construct(
-        #[Autowire('%redmine_url%')] string $redmineUrl,
-        #[Autowire('%redmine_api_key%')] string $apiKey,
+        #[Autowire('%redmine_url%')]
+        string $redmineUrl,
+        #[Autowire('%redmine_api_key%')]
+        string $apiKey,
     ) {
         $this->client = new NativeCurlClient($redmineUrl, $apiKey);
     }
@@ -42,7 +44,7 @@ class RedmineService
         $api = $this->client->getApi('user');
         $result = $api->getCurrentUser();
 
-        if (false === $result || !is_array($result) || !isset($result['user'])) {
+        if (false === $result || ! is_array($result) || ! isset($result['user'])) {
             throw new \RuntimeException('Invalid response from getCurrentUser API');
         }
 
@@ -108,7 +110,7 @@ class RedmineService
     public function getTimeEntries(array $params = []): array
     {
         $api = $this->client->getApi('time_entry');
-        
+
         return $api->all($params);
     }
 }

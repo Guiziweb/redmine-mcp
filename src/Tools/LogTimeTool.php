@@ -51,6 +51,7 @@ final class LogTimeTool extends AbstractMcpTool
     protected function execute(object $request): array
     {
         assert($request instanceof LogTimeRequest);
+
         return $this->timeEntryClient->logTime(
             $request->issueId,
             $request->hours,

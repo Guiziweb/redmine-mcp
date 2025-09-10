@@ -90,15 +90,15 @@ final class ListTimeEntriesTool extends AbstractMcpTool implements MetadataInter
                 'total_entries' => count($timeEntries),
                 'working_days' => $workingDays,
                 'average_hours_per_day' => round($averageHoursPerDay, 2),
-                'project_breakdown' => array_map(fn($h) => round($h, 2), $projectTotals),
-                'weekly_breakdown' => array_map(fn($h) => round($h, 2), $weeklyTotals),
-                'daily_breakdown' => array_map(fn($h) => round($h, 2), $dailyTotals)
+                'project_breakdown' => array_map(fn ($h) => round($h, 2), $projectTotals),
+                'weekly_breakdown' => array_map(fn ($h) => round($h, 2), $weeklyTotals),
+                'daily_breakdown' => array_map(fn ($h) => round($h, 2), $dailyTotals),
             ],
             'period' => [
                 'from' => $request->from,
                 'to' => $request->to,
-                'project_filter' => $request->projectId
-            ]
+                'project_filter' => $request->projectId,
+            ],
         ];
     }
 

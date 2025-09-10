@@ -20,18 +20,18 @@ class ProjectClient
     public function getMyProjects(): array
     {
         $data = $this->redmineService->getMyProjects();
-        
+
         $projects = $data['projects'] ?? [];
-        
+
         // Return only id, name and parent with defensive mapping
-        return array_map(function($project) {
+        return array_map(function ($project) {
             return [
                 'id' => $project['id'] ?? 0,
                 'name' => $project['name'] ?? 'Unknown',
                 'parent' => isset($project['parent']) ? [
                     'id' => $project['parent']['id'] ?? 0,
-                    'name' => $project['parent']['name'] ?? 'Unknown'
-                ] : null
+                    'name' => $project['parent']['name'] ?? 'Unknown',
+                ] : null,
             ];
         }, $projects);
     }

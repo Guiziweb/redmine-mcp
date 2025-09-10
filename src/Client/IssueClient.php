@@ -37,24 +37,24 @@ class IssueClient
         $result = $this->redmineService->getIssues($params);
 
         $issues = $result['issues'] ?? [];
-        
+
         // Return only essential fields to reduce payload with defensive mapping
-        return array_map(function($issue) {
+        return array_map(function ($issue) {
             return [
                 'id' => $issue['id'] ?? 0,
                 'subject' => $issue['subject'] ?? 'Unknown',
                 'status' => isset($issue['status']) ? [
                     'id' => $issue['status']['id'] ?? 0,
-                    'name' => $issue['status']['name'] ?? 'Unknown'
+                    'name' => $issue['status']['name'] ?? 'Unknown',
                 ] : ['id' => 0, 'name' => 'Unknown'],
                 'assigned_to' => isset($issue['assigned_to']) ? [
                     'id' => $issue['assigned_to']['id'] ?? 0,
-                    'name' => $issue['assigned_to']['name'] ?? 'Unknown'
+                    'name' => $issue['assigned_to']['name'] ?? 'Unknown',
                 ] : null,
                 'done_ratio' => $issue['done_ratio'] ?? 0,
                 'estimated_hours' => $issue['estimated_hours'] ?? null,
                 'created_on' => $issue['created_on'] ?? '',
-                'updated_on' => $issue['updated_on'] ?? ''
+                'updated_on' => $issue['updated_on'] ?? '',
             ];
         }, $issues);
     }
