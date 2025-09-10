@@ -8,7 +8,7 @@ An MCP (Model Context Protocol) server that integrates Redmine with AI assistant
 
 **Via Composer (Recommended):**
 ```bash
-composer create-project guiziweb/mcp-redmine --no-dev --optimize-autoloader
+composer create-project guiziweb/mcp-redmine --stability=dev
 ```
 
 **Via Git (For Development):**
