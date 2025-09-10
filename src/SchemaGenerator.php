@@ -36,7 +36,7 @@ final class SchemaGenerator
             'properties' => (object) $properties,
         ];
 
-        if (! empty($required)) {
+        if (!empty($required)) {
             $schema['required'] = $required;
         }
 

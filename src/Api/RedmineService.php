@@ -44,7 +44,7 @@ class RedmineService
         $api = $this->client->getApi('user');
         $result = $api->getCurrentUser();
 
-        if (false === $result || ! is_array($result) || ! isset($result['user'])) {
+        if (false === $result || !is_array($result) || !isset($result['user'])) {
             throw new \RuntimeException('Invalid response from getCurrentUser API');
         }
 
@@ -105,6 +105,7 @@ class RedmineService
      * Get time entries with optional filters.
      *
      * @param array<string, mixed> $params
+     *
      * @return array<string, mixed>
      */
     public function getTimeEntries(array $params = []): array

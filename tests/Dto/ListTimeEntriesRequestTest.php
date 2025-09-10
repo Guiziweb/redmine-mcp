@@ -106,7 +106,7 @@ class ListTimeEntriesRequestTest extends TestCase
             'from' => '2023-11-01',
             'to' => '2023-11-30',
             'limit' => 50,
-            'project_id' => 123
+            'project_id' => 123,
         ];
 
         $request = ListTimeEntriesRequest::fromArray($data);
