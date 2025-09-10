@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Tools;
 
 use App\Dto\DtoInterface;
-use App\Client\TimeEntryClient;
 use App\SchemaGenerator;
 use App\Tools\AbstractMcpTool;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\AI\McpSdk\Capability\Tool\ToolCall;
 use Symfony\Component\Validator\Constraints as Assert;

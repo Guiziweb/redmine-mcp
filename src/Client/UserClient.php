@@ -22,7 +22,7 @@ class UserClient
     {
         $data = $this->redmineService->getMyAccount();
 
-        if (! isset($data['user']) || empty($data['user'])) {
+        if (!isset($data['user']) || empty($data['user'])) {
             throw RedmineException::authenticationFailed();
         }
 

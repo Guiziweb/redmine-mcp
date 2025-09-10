@@ -23,6 +23,7 @@ class DtoInterfaceTest extends TestCase
 
     /**
      * @dataProvider dtoClassesProvider
+     *
      * @param class-string $dtoClass
      */
     public function testFromArrayReturnsCorrectType(string $dtoClass): void

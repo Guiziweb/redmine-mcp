@@ -53,15 +53,15 @@ class TimeEntryClient
         ];
 
         // Add date filters if specified
-        if ($from !== null) {
+        if (null !== $from) {
             $params['from'] = $from;
         }
-        if ($to !== null) {
+        if (null !== $to) {
             $params['to'] = $to;
         }
 
         // Add project filter if specified
-        if ($projectId !== null) {
+        if (null !== $projectId) {
             $params['project_id'] = $projectId;
         }
 

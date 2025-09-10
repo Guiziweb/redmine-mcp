@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Tools;
 
-use App\Dto\ListTimeEntriesRequest;
 use App\Client\TimeEntryClient;
 use App\SchemaGenerator;
 use App\Tools\ListTimeEntriesTool;
@@ -64,7 +63,7 @@ class ListTimeEntriesToolTest extends TestCase
                 'project' => ['id' => 1, 'name' => 'Test Project'],
                 'activity' => ['id' => 1, 'name' => 'Development'],
                 'created_on' => '2023-11-01T10:00:00Z',
-                'updated_on' => '2023-11-01T10:00:00Z'
+                'updated_on' => '2023-11-01T10:00:00Z',
             ],
             [
                 'id' => 2,
@@ -74,8 +73,8 @@ class ListTimeEntriesToolTest extends TestCase
                 'project' => ['id' => 1, 'name' => 'Test Project'],
                 'activity' => ['id' => 2, 'name' => 'Debug'],
                 'created_on' => '2023-11-02T14:00:00Z',
-                'updated_on' => '2023-11-02T14:00:00Z'
-            ]
+                'updated_on' => '2023-11-02T14:00:00Z',
+            ],
         ];
 
         $this->timeEntryClient
@@ -89,7 +88,7 @@ class ListTimeEntriesToolTest extends TestCase
             name: 'redmine_get_my_time_entries',
             arguments: [
                 'from' => '2023-11-01',
-                'to' => '2023-11-30'
+                'to' => '2023-11-30',
             ]
         );
 
@@ -126,7 +125,7 @@ class ListTimeEntriesToolTest extends TestCase
             'project' => ['id' => 1, 'name' => 'Project'],
             'activity' => ['id' => 1, 'name' => 'Development'],
             'created_on' => '2023-11-01T10:00:00Z',
-            'updated_on' => '2023-11-01T10:00:00Z'
+            'updated_on' => '2023-11-01T10:00:00Z',
         ]);
 
         $this->timeEntryClient
@@ -153,7 +152,7 @@ class ListTimeEntriesToolTest extends TestCase
             name: 'redmine_get_my_time_entries',
             arguments: [
                 'from' => 'invalid-date',
-                'limit' => -1
+                'limit' => -1,
             ]
         );
 
@@ -198,7 +197,7 @@ class ListTimeEntriesToolTest extends TestCase
             id: 'test-5',
             name: 'redmine_get_my_time_entries',
             arguments: [
-                'project_id' => 123
+                'project_id' => 123,
             ]
         );
 
