@@ -1,0 +1,20 @@
+parameters:
+    level: 7
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - vendor
+        - tests/bootstrap.php
+    bootstrapFiles:
+        - vendor/autoload.php
+    ignoreErrors:
+        # Redmine API library is not fully typed
+        - '#Call to an undefined method Redmine\\Api::#'
+        
+        # PHPUnit mocks in tests
+        - '#Call to an undefined method .*MockObject::expects#'
+        
+        # Schema array access in tests is safe
+        - '#Offset .* might not exist on array.*#'
+ 

@@ -1,57 +1,59 @@
-# Makefile pour ai-redmine
+# Makefile pour redmine-mcp
 # Usage: make [target]
 
-.PHONY: install test static-analysis cs-fix cs-check code-quality validate cache-clear clean help
+.PHONY: install-dev install-prod test static-analysis cs-fix cs-check code-quality validate cache-clear clean clean-dev help dev prod
 
-# Installation et setup
-install:
+# Default target
+.DEFAULT_GOAL := help
+
+dev: ## Setup complet développement
+	$(MAKE) install-dev
+
+prod: ## Setup production (sans dev deps)
+	$(MAKE) install-prod clean-dev
+
+install-dev: ## Installer toutes les dépendances dev
 	composer install --prefer-dist --no-progress
 
-# Tests
-test:
+install-prod: ## Installer uniquement les deps prod
+	composer install --prefer-dist --no-progress --no-dev --optimize-autoloader
+
+test: ## Lancer tous les tests
 	vendor/bin/phpunit --testdox
 
-# Analyse statique
-static-analysis:
-	vendor/bin/phpstan analyse src tests --level=5
+test-coverage: ## Tests avec couverture de code
+	vendor/bin/phpunit --testdox --coverage-text --coverage-clover=coverage.xml
 
-# Formatage du code
-cs-fix:
+phpstan: ## Analyse statique PHPStan
+	vendor/bin/phpstan analyse src tests
+
+static-analysis: ## Vérification formatage + PHPStan
+	$(MAKE) cs-check phpstan
+
+cs-fix: ## Corriger le formatage du code
 	vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php
 
-cs-check:
+cs-check: ## Vérifier le formatage (dry-run)
 	vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php --dry-run --diff
 
-# Formatage et analyse
-code-quality: cs-fix static-analysis 
+code-quality: ## Pipeline complet (fix + phpstan + tests)
+	$(MAKE) cs-fix phpstan test
 
-# Validation
-validate:
+validate: ## Valider composer.json
 	composer validate --strict
-	@echo "Validation Composer OK"
 
-# Cache
-cache-clear:
-	php bin/console cache:clear --env=test
-	@echo "Cache vidé"
+cache-clear: ## Vider le cache Symfony
+	php bin/console cache:clear
 
-# Nettoyage
-clean:
-	rm -rf var/cache/* var/log/*
-	@echo "Nettoyage effectué"
+clean: ## Nettoyer les fichiers temporaires
+	rm -rf var/cache/* var/log/* coverage.xml .phpunit.cache
 
+clean-dev: ## Supprimer node_modules
+	rm -rf node_modules/ package-lock.json
 
-
-# Aide
-help:
-	@echo "Commandes disponibles :"
-	@echo "  install        - Installer les dépendances"
-	@echo "  test           - Lancer tous les tests"
-	@echo "  static-analysis- Analyse statique avec PHPStan"
-	@echo "  cs-fix         - Corriger le formatage du code"
-	@echo "  cs-check       - Vérifier le formatage (dry-run)"
-	@echo "  code-quality   - Formatage + analyse statique"
-	@echo "  validate       - Valider composer.json"
-	@echo "  cache-clear    - Vider le cache"
-	@echo "  clean          - Nettoyer les fichiers temporaires"
-	@echo "  help           - Afficher cette aide" 
+help: ## Afficher cette aide
+	@echo "REDMINE-MCP MAKEFILE"
+	@echo ""
+	@echo "Usage: make <target>"
+	@echo ""
+	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*?##/ { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)

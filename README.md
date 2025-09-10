@@ -1,107 +1,217 @@
-# redmine-mcp
+# MCP Redmine Server
 
-[![PHPStan](https://img.shields.io/badge/PHPStan-Level%205-brightgreen.svg)](https://phpstan.org/)
-[![PHPUnit](https://img.shields.io/badge/PHPUnit-100%25%20coverage-brightgreen.svg)](https://phpunit.de/)
+An MCP (Model Context Protocol) server that integrates Redmine with AI assistants like Claude Desktop, enabling natural language interaction with your Redmine instance.
 
-Un serveur MCP (Model Context Protocol) pour Redmine qui expose les endpoints GET de l'API Redmine comme outils MCP.
+## 🚀 Quick Start
 
-## 🚀 Installation
+### 1. Installation
 
-### Prérequis
-
-- PHP 8.1+
-- Composer
-- Node.js (pour MCP Inspector)
-- Accès à une instance Redmine avec API key
-
-### 1. Installation des dépendances PHP
-
+**Via Composer (Recommended):**
 ```bash
+composer create-project guiziweb/mcp-redmine --no-dev --optimize-autoloader
+cd mcp-redmine
+```
+
+**Via Git (For Development):**
+```bash
+git clone https://github.com/guiziweb/mcp-redmine.git
+cd mcp-redmine
 composer install
 ```
 
-### 2. Installation de MCP Inspector (outil de développement)
+### 2. Configuration
 
-```bash
-npm install
-```
+> 💡 **Get your Redmine API key**: Go to Redmine → My account → API access key → Show
 
-### 3. Configuration
+**For Claude Desktop (Recommended - Simple Setup):**
 
-Créez un fichier `.env.local` avec vos paramètres Redmine :
-
-```env
-REDMINE_URL=https://votre-instance-redmine.com
-REDMINE_API_KEY=votre_clé_api_redmine
-```
-
-### Utiliser MCP Inspector
-
-```bash
-# Inspecter le serveur MCP
-npx mcp-inspector php bin/console mcp:server
-```
-
-**Note :** Le serveur MCP est fourni par le bundle Symfony MCP et expose automatiquement les outils basés sur l'API Redmine.
-
-### Connecter à Cursor
-
-Pour utiliser ce serveur MCP avec Cursor, ajoutez cette configuration dans votre fichier `.cursor/mcp.json` :
-
+Create a `.mcp.json` file in your project directory. See [MCP Setup Guide](https://docs.anthropic.com/en/docs/claude-code/mcp) for detailed instructions.
 ```json
 {
   "mcpServers": {
     "redmine": {
       "command": "php",
-      "args": [
-        "/path/project/bin/console",
-        "mcp:server"
-      ]
+      "args": ["bin/console", "mcp:server"],
+      "cwd": "/absolute/path/to/mcp-redmine",
+      "env": {
+        "REDMINE_URL": "https://your-redmine-instance.com",
+        "REDMINE_API_KEY": "your_api_key_here"
+      }
     }
   }
 }
 ```
 
-### Tests
+> ⚠️ **Important**: Replace `/absolute/path/to/mcp-redmine` with the full path to your project directory.
 
-Le projet utilise un **Makefile** pour simplifier les commandes de développement.
+### 3. Restart Your AI Assistant
 
-**Commandes principales :**
+Close and restart your MCP client (Claude Desktop, Cursor, etc.).
+
+## ✨ Features
+
+### Available Tools
+
+| Tool | Description | Usage Example |
+|------|-------------|---------------|
+| `redmine_list_projects` | List all your Redmine projects | "Show me all my Redmine projects" |
+| `redmine_list_issues` | List issues from a specific project | "Show issues from project X" |
+| `redmine_get_my_time_entries` | Get your time entries with filtering | "Show my time entries for August 2025" |
+| `redmine_list_activities` | List available time entry activities | "What activities can I log time to?" |
+| `redmine_log_time` | Log time to an issue | "Log 2 hours of development to issue #123" |
+
+### Smart Features
+
+- **Date Intelligence**: "Show my time for last month", "August 2025 entries"
+- **Smart Summaries**: Automatic totals, weekly/daily breakdowns
+- **Work Analysis**: Hours per day, project breakdowns, weekly patterns
+- **Caching**: Projects and activities cached for performance
+
+## 🛠 Development
+
+### Requirements
+
+- PHP 8.2+
+- Composer
+- Access to a Redmine instance with API enabled
+
+### Testing
+
 ```bash
-make test              # Lancer tous les tests
-make static-analysis   # Analyse statique avec PHPStan
+# Run all tests
+composer test
+
+# Run specific test
+vendor/bin/phpunit tests/Tools/ListProjectsToolTest.php
+
+# Run with coverage
+vendor/bin/phpunit --coverage-html coverage
 ```
 
-**Autres commandes utiles :**
+### Code Quality
+
 ```bash
-make install           # Installer les dépendances
-make cache-clear       # Vider le cache
-make clean             # Nettoyer les fichiers temporaires
-make help              # Afficher toutes les commandes
+# Static analysis
+vendor/bin/phpstan analyze
+
+# Code style
+vendor/bin/php-cs-fixer fix
 ```
 
+### Architecture
 
-### Ajouter un nouvel outil
+```mermaid
+graph TD
+    A[AI Assistant<br/>Claude Desktop/Cursor] -->|MCP Protocol| B[MCP Server]
+    
+    subgraph "MCP Tools Layer - src/Tools/"
+        B --> C[ListProjectsTool]
+        B --> D[ListIssuesTool] 
+        B --> E[LogTimeTool]
+        B --> F[ListTimeEntriesTool]
+        B --> G[ListTimeActivitiesTool]
+        B --> H[AbstractMcpTool]
+    end
+    
+    subgraph "Client Layer - src/Client/"
+        C --> I[ProjectClient]
+        D --> J[IssueClient]
+        E --> K[TimeEntryClient]
+        F --> K
+        G --> K
+        L[UserClient]
+        I -.->|Cache 24h| M[CachedProjectClient]
+        K -.->|Cache 10min| N[CachedTimeEntryClient]
+    end
+    
+    subgraph "API Layer - src/Api/"
+        I --> O[RedmineService]
+        J --> O
+        K --> O
+        L --> O
+        O -->|HTTP REST API| P[Redmine Server]
+    end
+    
+    subgraph "Supporting - src/"
+        Q[Dto/<br/>Data Transfer Objects] 
+        R[Exception/<br/>Custom Exceptions]
+        S[Repository/<br/>Domain Layer]
+        T[SchemaGenerator.php<br/>JSON Schema]
+        U[Kernel.php<br/>Symfony Kernel]
+    end
+    
+    style A fill:#e1f5fe
+    style P fill:#ffebee
+    style B fill:#f3e5f5
+    style M fill:#fff3e0
+    style N fill:#fff3e0
+```
 
-Les outils sont générés automatiquement à partir du fichier `redmine_openapi.yml`. Pour ajouter un nouvel endpoint :
+## 📚 Usage Examples
 
-1. Mettre à jour `redmine_openapi.yml`
-2. Redémarrer le serveur MCP
+### Project Management
+```
+User: "List all my Redmine projects"
+AI: Shows formatted list of projects with IDs and names
 
-**Note :** Les outils sont générés dynamiquement par `DynamicToolFactory` basé sur la spécification OpenAPI.
+User: "Show me issues from project 'Mobile App'"
+AI: Lists all issues from the specified project
+```
 
-## 📋 Fonctionnalités
+### Time Tracking
+```
+User: "Show my time entries for August 2025"
+AI: Displays time entries with daily/weekly totals and work analysis
 
-- ✅ **Outils GET** pour récupérer les données Redmine
-- ✅ **Conformité MCP** avec les conventions de nommage
+User: "Log 3.5 hours of testing to issue #456"  
+AI: Logs time entry with Testing activity to the specified issue
+```
 
-### Problème d'authentification
+### Smart Analysis
+```
+User: "How many hours did I work last week?"
+AI: Calculates and shows weekly totals with breakdown
 
-Vérifiez votre `.env.local` :
-- URL Redmine correcte
-- Clé API valide
-- Permissions suffisantes
+User: "What's my daily average this month?"
+AI: Shows monthly progress with hours per day analysis
+```
 
-## 📝 Licence
+## 🔧 Configuration Options
 
-Ce projet est sous licence MIT.
+### Cache Settings
+
+- **Projects**: 24 hours (rarely change)
+- **Activities**:24 hours (rarely change)
+- **Issues**: No cache (change frequently)
+- **Time entries**: No cache (real-time data)
+
+## 🚨 Security
+
+- ✅ Environment-based configuration
+- ✅ Validation on all inputs
+- ✅ Error handling without data exposure
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **"No tools available"**
+   - Check MCP configuration file path
+   - Verify PHP is in PATH
+   - Restart your AI assistant
+
+2. **"Authentication failed"**
+   - Verify `REDMINE_URL` and `REDMINE_API_KEY`
+   - Check API key permissions in Redmine
+   - Ensure API is enabled in Redmine settings
+
+3. **"Command not found"**
+   - Check `cwd` path in MCP config
+   - Verify `composer install` was run
+   - Check file permissions
+
+## 🔗 Related
+
+- [Model Context Protocol](https://github.com/anthropics/mcp)
+- [Claude Desktop](https://claude.ai/desktop)
+- [Redmine API Documentation](https://www.redmine.org/projects/redmine/wiki/Rest_api)
