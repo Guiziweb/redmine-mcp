@@ -22,7 +22,7 @@ final class ListTimeEntriesTool extends AbstractMcpTool implements MetadataInter
 
     public function getName(): string
     {
-        return 'redmine_get_my_time_entries';
+        return 'redmine_list_time_entries';
     }
 
     public function getDescription(): string
