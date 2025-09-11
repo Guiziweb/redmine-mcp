@@ -57,6 +57,7 @@ Close and restart your MCP client (Claude Desktop, Cursor, etc.).
 |------|-------------|------------|-----------------|
 | `redmine_list_projects` | Lists all your accessible Redmine projects with their hierarchy and IDs | None | • "Show me all my Redmine projects"<br>• "List my projects"<br>• "What projects do I have access to?" |
 | `redmine_list_issues` | Lists issues from ONE specific project. Always shows the project list first and asks which project you want | • **project_id** (required): The project ID<br>• **limit** (optional): Max results (1-100, default: 25) | • "Show issues from project Mobile App"<br>• "List my tasks on project #123"<br>• "What tickets are assigned to me on project X?" |
+| `redmine_get_issue_details` | Get detailed information about a specific Redmine issue by its ID. Returns comprehensive issue data including description, status, priority, assignee, dates, attachments, and more | • **issue_id** (required): The issue ID<br>• **include** (optional): Additional data to include (children, attachments, relations, changesets, journals, watchers, allowed_statuses) | • "Show me details of issue #123"<br>• "Get full information about ticket #456"<br>• "Show issue #789 with attachments and journals" |
 | `redmine_list_time_entries` | Retrieves your time entries with smart filtering, totals, and work analysis (daily/weekly/project breakdowns) | • **from** (optional): Start date (YYYY-MM-DD)<br>• **to** (optional): End date (YYYY-MM-DD)<br>• **limit** (optional): Max results (1-100, default: 100)<br>• **project_id** (optional): Filter by project | • "Show my hours from August 1st to August 31st"<br>• "Show my time entries for last week"<br>• "What's my daily average this month?"<br>• "Get my hours by project" |
 | `redmine_log_time` | Logs time to a specific issue. Will ask you for each parameter interactively (hours, comment, activity type) | • **issue_id** (required): The issue ID<br>• **hours** (required): Hours worked (0.1-24)<br>• **comment** (required): Work description (max 1000 chars)<br>• **activity_id** (required): Activity type ID | • "Log 2 hours to issue #123"<br>• "Add time to ticket #456"<br>• "I worked 3.5 hours on issue #789" |
 
@@ -111,6 +112,7 @@ graph TD
     subgraph "MCP Tools Layer - src/Tools/"
         B --> C[ListProjectsTool]
         B --> D[ListIssuesTool] 
+        B --> DI[GetIssueDetailsTool]
         B --> E[LogTimeTool]
         B --> F[ListTimeEntriesTool]
         B --> G[ListTimeActivitiesTool]
@@ -120,6 +122,7 @@ graph TD
     subgraph "Client Layer - src/Client/"
         C --> I[ProjectClient]
         D --> J[IssueClient]
+        DI --> J
         E --> K[TimeEntryClient]
         F --> K
         G --> K
