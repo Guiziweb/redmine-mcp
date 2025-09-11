@@ -30,8 +30,10 @@ Create a `.mcp.json` file in your project directory. See [MCP Setup Guide](https
   "mcpServers": {
     "redmine": {
       "command": "php",
-      "args": ["bin/console", "mcp:server"],
-      "cwd": "/absolute/path/to/mcp-redmine",
+      "args": [
+        "absolute/path/to/mcp-redmine/bin/console",
+        "mcp:server"
+      ],
       "env": {
         "REDMINE_URL": "https://your-redmine-instance.com",
         "REDMINE_API_KEY": "your_api_key_here"
@@ -51,13 +53,12 @@ Close and restart your MCP client (Claude Desktop, Cursor, etc.).
 
 ### Available Tools
 
-| Tool | Description | Usage Example |
-|------|-------------|---------------|
-| `redmine_list_projects` | List all your Redmine projects | "Show me all my Redmine projects" |
-| `redmine_list_issues` | List issues from a specific project | "Show issues from project X" |
-| `redmine_get_my_time_entries` | Get your time entries with filtering | "Show my time entries for August 2025" |
-| `redmine_list_activities` | List available time entry activities | "What activities can I log time to?" |
-| `redmine_log_time` | Log time to an issue | "Log 2 hours of development to issue #123" |
+| Tool | Description | Parameters | Example Prompts |
+|------|-------------|------------|-----------------|
+| `redmine_list_projects` | Lists all your accessible Redmine projects with their hierarchy and IDs | None | • "Show me all my Redmine projects"<br>• "List my projects"<br>• "What projects do I have access to?" |
+| `redmine_list_issues` | Lists issues from ONE specific project. Always shows the project list first and asks which project you want | • **project_id** (required): The project ID<br>• **limit** (optional): Max results (1-100, default: 25) | • "Show issues from project Mobile App"<br>• "List my tasks on project #123"<br>• "What tickets are assigned to me on project X?" |
+| `redmine_list_time_entries` | Retrieves your time entries with smart filtering, totals, and work analysis (daily/weekly/project breakdowns) | • **from** (optional): Start date (YYYY-MM-DD)<br>• **to** (optional): End date (YYYY-MM-DD)<br>• **limit** (optional): Max results (1-100, default: 100)<br>• **project_id** (optional): Filter by project | • "Show my hours from August 1st to August 31st"<br>• "Show my time entries for last week"<br>• "What's my daily average this month?"<br>• "Get my hours by project" |
+| `redmine_log_time` | Logs time to a specific issue. Will ask you for each parameter interactively (hours, comment, activity type) | • **issue_id** (required): The issue ID<br>• **hours** (required): Hours worked (0.1-24)<br>• **comment** (required): Work description (max 1000 chars)<br>• **activity_id** (required): Activity type ID | • "Log 2 hours to issue #123"<br>• "Add time to ticket #456"<br>• "I worked 3.5 hours on issue #789" |
 
 ### Smart Features
 
@@ -74,6 +75,10 @@ Close and restart your MCP client (Claude Desktop, Cursor, etc.).
 - Composer
 - Access to a Redmine instance with API enabled
 
+### Api
+
+- **Redmine API Client**: [kbsali/redmine-api](https://github.com/kbsali/php-redmine-api) v2.8+ - A comprehensive PHP library for Redmine API
+- 
 ### Testing
 
 ```bash
@@ -120,7 +125,7 @@ graph TD
         G --> K
         L[UserClient]
         I -.->|Cache 24h| M[CachedProjectClient]
-        K -.->|Cache 10min| N[CachedTimeEntryClient]
+        K -.->|Cache 24h| N[CachedTimeEntryClient]
     end
     
     subgraph "API Layer - src/Api/"
@@ -134,10 +139,14 @@ graph TD
     subgraph "Supporting - src/"
         Q[Dto/<br/>Data Transfer Objects] 
         R[Exception/<br/>Custom Exceptions]
-        S[Repository/<br/>Domain Layer]
         T[SchemaGenerator.php<br/>JSON Schema]
         U[Kernel.php<br/>Symfony Kernel]
     end
+    
+    %% Schema generation flow
+    Q -.->|Validates| H
+    T -.->|Generates JSON Schema from| Q
+    H -.->|Uses schemas for MCP| A
     
     style A fill:#e1f5fe
     style P fill:#ffebee
@@ -146,34 +155,19 @@ graph TD
     style N fill:#fff3e0
 ```
 
-## 📚 Usage Examples
+#### Key Architecture Concepts
 
-### Project Management
-```
-User: "List all my Redmine projects"
-AI: Shows formatted list of projects with IDs and names
+**Automatic Schema Generation**: The tool input parameters are automatically generated from DTOs (Data Transfer Objects):
+- Each tool has a corresponding DTO class (e.g., `ListIssuesRequest` for `ListIssuesTool`)
+- DTOs use Symfony Validation constraints to define parameter rules
+- `SchemaGenerator` automatically converts these DTOs with their validation constraints into JSON Schema
+- This ensures type safety and validation at both the MCP protocol level and application level
 
-User: "Show me issues from project 'Mobile App'"
-AI: Lists all issues from the specified project
-```
-
-### Time Tracking
-```
-User: "Show my time entries for August 2025"
-AI: Displays time entries with daily/weekly totals and work analysis
-
-User: "Log 3.5 hours of testing to issue #456"  
-AI: Logs time entry with Testing activity to the specified issue
-```
-
-### Smart Analysis
-```
-User: "How many hours did I work last week?"
-AI: Calculates and shows weekly totals with breakdown
-
-User: "What's my daily average this month?"
-AI: Shows monthly progress with hours per day analysis
-```
+Example flow:
+1. `ListIssuesRequest` DTO defines `project_id` as required and positive integer
+2. `SchemaGenerator` reads the validation constraints and generates JSON Schema
+3. MCP uses this schema to validate inputs before calling the tool
+4. The tool also validates using Symfony Validator for double safety
 
 ## 🔧 Configuration Options
 
@@ -205,9 +199,9 @@ AI: Shows monthly progress with hours per day analysis
    - Ensure API is enabled in Redmine settings
 
 3. **"Command not found"**
-   - Check `cwd` path in MCP config
+   - Check `args` path in MCP config (use absolute path)
    - Verify `composer install` was run
-   - Check file permissions
+   - Check file permissions on bin/console
 
 ## 🔗 Related
 

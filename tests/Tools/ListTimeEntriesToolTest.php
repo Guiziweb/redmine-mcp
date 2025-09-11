@@ -35,7 +35,7 @@ class ListTimeEntriesToolTest extends TestCase
 
     public function testGetName(): void
     {
-        $this->assertEquals('redmine_get_my_time_entries', $this->tool->getName());
+        $this->assertEquals('redmine_list_time_entries', $this->tool->getName());
     }
 
     public function testGetDescription(): void
@@ -85,7 +85,7 @@ class ListTimeEntriesToolTest extends TestCase
 
         $toolCall = new ToolCall(
             id: 'test-1',
-            name: 'redmine_get_my_time_entries',
+            name: 'redmine_list_time_entries',
             arguments: [
                 'from' => '2023-11-01',
                 'to' => '2023-11-30',
@@ -135,7 +135,7 @@ class ListTimeEntriesToolTest extends TestCase
 
         $toolCall = new ToolCall(
             id: 'test-2',
-            name: 'redmine_get_my_time_entries',
+            name: 'redmine_list_time_entries',
             arguments: []
         );
 
@@ -149,7 +149,7 @@ class ListTimeEntriesToolTest extends TestCase
     {
         $toolCall = new ToolCall(
             id: 'test-3',
-            name: 'redmine_get_my_time_entries',
+            name: 'redmine_list_time_entries',
             arguments: [
                 'from' => 'invalid-date',
                 'limit' => -1,
@@ -173,7 +173,7 @@ class ListTimeEntriesToolTest extends TestCase
 
         $toolCall = new ToolCall(
             id: 'test-4',
-            name: 'redmine_get_my_time_entries',
+            name: 'redmine_list_time_entries',
             arguments: []
         );
 
@@ -195,7 +195,7 @@ class ListTimeEntriesToolTest extends TestCase
 
         $toolCall = new ToolCall(
             id: 'test-5',
-            name: 'redmine_get_my_time_entries',
+            name: 'redmine_list_time_entries',
             arguments: [
                 'project_id' => 123,
             ]
