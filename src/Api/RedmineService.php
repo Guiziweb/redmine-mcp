@@ -34,6 +34,20 @@ class RedmineService
     }
 
     /**
+     * Get a specific issue by ID.
+     *
+     * @param array<string, mixed> $params
+     *
+     * @return array<string, mixed>
+     */
+    public function getIssue(int $issueId, array $params = []): array
+    {
+        $api = $this->client->getApi('issue');
+
+        return $api->show($issueId, $params);
+    }
+
+    /**
      * Get current authenticated user account.
      */
     /**
