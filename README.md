@@ -78,7 +78,7 @@ Close and restart your MCP client (Claude Desktop, Cursor, etc.).
 ### Api
 
 - **Redmine API Client**: [kbsali/redmine-api](https://github.com/kbsali/php-redmine-api) v2.8+ - A comprehensive PHP library for Redmine API
-- 
+
 ### Testing
 
 ```bash
