@@ -5,51 +5,42 @@ declare(strict_types=1);
 namespace App\Tools;
 
 use App\Client\TimeEntryClient;
-use App\Dto\ListTimeEntriesRequest;
-use App\SchemaGenerator;
-use Symfony\AI\McpSdk\Capability\Tool\MetadataInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Mcp\Capability\Attribute\McpTool;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
-final class ListTimeEntriesTool extends AbstractMcpTool implements MetadataInterface
+#[Autoconfigure(public: true)]
+final class ListTimeEntriesTool
 {
     public function __construct(
         private readonly TimeEntryClient $timeEntryClient,
-        ValidatorInterface $validator,
-        SchemaGenerator $schemaGenerator,
     ) {
-        parent::__construct($validator, $schemaGenerator);
     }
 
-    public function getName(): string
-    {
-        return 'redmine_list_time_entries';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Get my time entries with optional date filtering and total calculation. Perfect for monthly time tracking and work hour analysis.';
-    }
-
-    public function getTitle(): string
-    {
-        return 'Get My Time Entries';
-    }
-
-    protected function getRequestClass(): string
-    {
-        return ListTimeEntriesRequest::class;
-    }
-
-    /** @return array<string, mixed> */
-    protected function execute(object $request): array
-    {
-        assert($request instanceof ListTimeEntriesRequest);
-
+    /**
+     * Get my time entries with optional date filtering and total calculation.
+     *
+     * @param int         $limit      Maximum number of entries to return (default: 100)
+     * @param string|null $from       Start date (YYYY-MM-DD)
+     * @param string|null $to         End date (YYYY-MM-DD)
+     * @param int|null    $project_id Filter by project ID
+     *
+     * @return array<string, mixed>
+     */
+    #[McpTool(
+        name: 'redmine_list_time_entries',
+        description: 'Get my time entries with optional date filtering and total calculation. Perfect for monthly time tracking and work hour analysis.'
+    )]
+    public function listTimeEntries(
+        int $limit = 100,
+        ?string $from = null,
+        ?string $to = null,
+        ?int $project_id = null
+    ): array {
         $timeEntries = $this->timeEntryClient->getMyTimeEntries(
-            $request->limit,
-            $request->from,
-            $request->to,
-            $request->projectId
+            $limit,
+            $from,
+            $to,
+            $project_id
         );
 
         // Calculate totals
@@ -95,15 +86,10 @@ final class ListTimeEntriesTool extends AbstractMcpTool implements MetadataInter
                 'daily_breakdown' => array_map(fn ($h) => round($h, 2), $dailyTotals),
             ],
             'period' => [
-                'from' => $request->from,
-                'to' => $request->to,
-                'project_filter' => $request->projectId,
+                'from' => $from,
+                'to' => $to,
+                'project_filter' => $project_id,
             ],
         ];
-    }
-
-    protected function getErrorMessage(): string
-    {
-        return 'Failed to retrieve time entries';
     }
 }

@@ -6,10 +6,12 @@ namespace App\Client;
 
 use App\Api\RedmineService;
 use App\Exception\RedmineException;
+use SymfonyComponentDependencyInjectionAttributeAutoconfigure;
 
 /**
  * Client for user-related Redmine operations.
  */
+#[Autoconfigure(public: true)]
 class UserClient
 {
     public function __construct(

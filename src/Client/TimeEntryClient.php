@@ -6,9 +6,11 @@ namespace App\Client;
 
 use App\Api\RedmineService;
 
+use SymfonyComponentDependencyInjectionAttributeAutoconfigure;
 /**
  * Client for time entry-related Redmine operations.
  */
+#[Autoconfigure(public: true)]
 class TimeEntryClient
 {
     public function __construct(

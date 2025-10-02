@@ -6,9 +6,11 @@ namespace App\Client;
 
 use App\Api\RedmineService;
 
+use SymfonyComponentDependencyInjectionAttributeAutoconfigure;
 /**
  * Client for issue-related Redmine operations.
  */
+#[Autoconfigure(public: true)]
 class IssueClient
 {
     public function __construct(

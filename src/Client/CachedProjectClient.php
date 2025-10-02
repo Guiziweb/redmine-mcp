@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Client;
 
 use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
 /**
  * Cached wrapper for ProjectClient.
  */
+#[Autoconfigure(public: true)]
 class CachedProjectClient
 {
     private const CACHE_TTL = 86400; // 1 day for projects

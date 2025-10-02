@@ -4,8 +4,6 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    redmine_url: '%env(REDMINE_URL)%'
-    redmine_api_key: '%env(REDMINE_API_KEY)%'
 
 services:
     # default configuration for services in *this* file
@@ -18,4 +16,18 @@ services:
     App\:
         resource: '../src/'
 
-    # Clients are auto-configured via autowiring
+    # Inject service_container
+    App\Controller\McpController:
+        arguments:
+            $serviceContainer: '@service_container'
+
+    # Tag all MCP tools
+    App\Tools\:
+        resource: '../src/Tools/'
+        tags: ['mcp.tool']
+
+    # Redmine service with credentials from environment
+    App\Api\RedmineService:
+        arguments:
+            $redmineUrl: '%env(REDMINE_URL)%'
+            $redmineApiKey: '%env(REDMINE_API_KEY)%'

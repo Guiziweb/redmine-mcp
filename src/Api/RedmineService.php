@@ -3,19 +3,21 @@
 namespace App\Api;
 
 use Redmine\Client\NativeCurlClient;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class RedmineService
 {
-    private NativeCurlClient $client;
-
     public function __construct(
-        #[Autowire('%redmine_url%')]
-        string $redmineUrl,
-        #[Autowire('%redmine_api_key%')]
-        string $apiKey,
+        private readonly string $redmineUrl,
+        private readonly string $redmineApiKey,
     ) {
-        $this->client = new NativeCurlClient($redmineUrl, $apiKey);
+    }
+
+    private function getClient(): NativeCurlClient
+    {
+        return new NativeCurlClient(
+            $this->redmineUrl,
+            $this->redmineApiKey
+        );
     }
 
     /**
@@ -28,7 +30,8 @@ class RedmineService
      */
     public function getIssues(array $params = []): array
     {
-        $api = $this->client->getApi('issue');
+        $client = $this->getClient();
+        $api = $client->getApi('issue');
 
         return $api->list($params);
     }
@@ -42,7 +45,8 @@ class RedmineService
      */
     public function getIssue(int $issueId, array $params = []): array
     {
-        $api = $this->client->getApi('issue');
+        $client = $this->getClient();
+        $api = $client->getApi('issue');
 
         return $api->show($issueId, $params);
     }
@@ -55,7 +59,8 @@ class RedmineService
      */
     public function getMyAccount(): array
     {
-        $api = $this->client->getApi('user');
+        $client = $this->getClient();
+        $api = $client->getApi('user');
         $result = $api->getCurrentUser();
 
         if (false === $result || !is_array($result) || !isset($result['user'])) {
@@ -73,7 +78,8 @@ class RedmineService
      */
     public function getMyProjects(): array
     {
-        $api = $this->client->getApi('project');
+        $client = $this->getClient();
+        $api = $client->getApi('project');
 
         return $api->list(['membership' => true]);
     }
@@ -86,7 +92,8 @@ class RedmineService
      */
     public function getTimeEntryActivities(): array
     {
-        $api = $this->client->getApi('time_entry_activity');
+        $client = $this->getClient();
+        $api = $client->getApi('time_entry_activity');
 
         return $api->list();
     }
@@ -109,7 +116,8 @@ class RedmineService
             $data['activity_id'] = $activityId;
         }
 
-        $api = $this->client->getApi('time_entry');
+        $client = $this->getClient();
+        $api = $client->getApi('time_entry');
         $api->create($data);
 
         return ['success' => true];
@@ -124,7 +132,8 @@ class RedmineService
      */
     public function getTimeEntries(array $params = []): array
     {
-        $api = $this->client->getApi('time_entry');
+        $client = $this->getClient();
+        $api = $client->getApi('time_entry');
 
         return $api->all($params);
     }
