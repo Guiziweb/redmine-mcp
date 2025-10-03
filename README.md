@@ -22,7 +22,12 @@ composer install
 
 > 💡 **Get your Redmine API key**: Go to Redmine → My account → API access key → Show
 
-**Update `.env` file:**
+**Copy `.env.example` to `.env` and update it:**
+```bash
+cp .env.example .env
+```
+
+Then edit `.env`:
 ```bash
 REDMINE_URL=https://your-redmine-instance.com
 REDMINE_API_KEY=your_api_key_here
