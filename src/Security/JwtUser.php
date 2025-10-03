@@ -7,7 +7,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class JwtUser implements UserInterface
 {
     /**
-     * @param string[] $roles
+     * @param string[]             $roles
      * @param array<string, mixed> $claims
      */
     public function __construct(

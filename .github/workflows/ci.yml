@@ -74,6 +74,9 @@ jobs:
           key: ${{ runner.os }}-php-${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-php-${{ matrix.php-version }}-
 
+      - name: Copy .env file
+        run: cp .env.example .env
+
       - name: Install dependencies
         run: make install-dev
 
