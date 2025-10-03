@@ -34,7 +34,7 @@ final class ListTimeEntriesTool
         int $limit = 100,
         ?string $from = null,
         ?string $to = null,
-        ?int $project_id = null
+        ?int $project_id = null,
     ): array {
         $timeEntries = $this->timeEntryClient->getMyTimeEntries(
             $limit,

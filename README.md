@@ -22,32 +22,54 @@ composer install
 
 > 💡 **Get your Redmine API key**: Go to Redmine → My account → API access key → Show
 
-**For Claude Desktop (Recommended - Simple Setup):**
+**Update `.env` file:**
+```bash
+REDMINE_URL=https://your-redmine-instance.com
+REDMINE_API_KEY=your_api_key_here
+```
 
-Create a `.mcp.json` file in your project directory. See [MCP Setup Guide](https://docs.anthropic.com/en/docs/claude-code/mcp) for detailed instructions.
+**Start the HTTP server:**
+```bash
+symfony server:start
+# or
+php -S 127.0.0.1:8000 -t public
+```
+
+**Configure MCP Client:**
+
+Create a `.mcp.json` file:
 ```json
 {
   "mcpServers": {
     "redmine": {
-      "command": "php",
-      "args": [
-        "absolute/path/to/mcp-redmine/bin/console",
-        "mcp:server"
-      ],
-      "env": {
-        "REDMINE_URL": "https://your-redmine-instance.com",
-        "REDMINE_API_KEY": "your_api_key_here"
-      }
+      "url": "http://127.0.0.1:8000/mcp",
+      "transport": "http"
     }
   }
 }
 ```
 
-> ⚠️ **Important**: Replace `/absolute/path/to/mcp-redmine` with the full path to your project directory.
-
 ### 3. Restart Your AI Assistant
 
 Close and restart your MCP client (Claude Desktop, Cursor, etc.).
+
+## 🔐 Remote Access with OAuth2 (Team Sharing)
+
+Want to share your MCP server with your team? Secure it with OAuth2 + Keycloak!
+
+**Benefits:**
+- 🌐 **Remote access**: Deploy once, use from anywhere
+- 👥 **Team sharing**: Multiple users, centralized authentication
+- 🔒 **Access control**: Restrict by email domain, groups, roles
+- 📊 **Audit trail**: Track who does what
+
+**Quick Setup:**
+1. Start Keycloak with Docker
+2. Configure realm with Dynamic Client Registration (DCR)
+3. Update MCP server `.env` with Keycloak credentials
+4. Clients auto-register and authenticate via browser
+
+👉 **[Complete OAuth2 Setup Guide](docs/OAUTH_SETUP.md)**
 
 ## ✨ Features
 
@@ -103,75 +125,6 @@ vendor/bin/phpstan analyze
 vendor/bin/php-cs-fixer fix
 ```
 
-### Architecture
-
-```mermaid
-graph TD
-    A[AI Assistant<br/>Claude Desktop/Cursor] -->|MCP Protocol| B[MCP Server]
-    
-    subgraph "MCP Tools Layer - src/Tools/"
-        B --> C[ListProjectsTool]
-        B --> D[ListIssuesTool] 
-        B --> DI[GetIssueDetailsTool]
-        B --> E[LogTimeTool]
-        B --> F[ListTimeEntriesTool]
-        B --> G[ListTimeActivitiesTool]
-        B --> H[AbstractMcpTool]
-    end
-    
-    subgraph "Client Layer - src/Client/"
-        C --> I[ProjectClient]
-        D --> J[IssueClient]
-        DI --> J
-        E --> K[TimeEntryClient]
-        F --> K
-        G --> K
-        L[UserClient]
-        I -.->|Cache 24h| M[CachedProjectClient]
-        K -.->|Cache 24h| N[CachedTimeEntryClient]
-    end
-    
-    subgraph "API Layer - src/Api/"
-        I --> O[RedmineService]
-        J --> O
-        K --> O
-        L --> O
-        O -->|HTTP REST API| P[Redmine Server]
-    end
-    
-    subgraph "Supporting - src/"
-        Q[Dto/<br/>Data Transfer Objects] 
-        R[Exception/<br/>Custom Exceptions]
-        T[SchemaGenerator.php<br/>JSON Schema]
-        U[Kernel.php<br/>Symfony Kernel]
-    end
-    
-    %% Schema generation flow
-    Q -.->|Validates| H
-    T -.->|Generates JSON Schema from| Q
-    H -.->|Uses schemas for MCP| A
-    
-    style A fill:#e1f5fe
-    style P fill:#ffebee
-    style B fill:#f3e5f5
-    style M fill:#fff3e0
-    style N fill:#fff3e0
-```
-
-#### Key Architecture Concepts
-
-**Automatic Schema Generation**: The tool input parameters are automatically generated from DTOs (Data Transfer Objects):
-- Each tool has a corresponding DTO class (e.g., `ListIssuesRequest` for `ListIssuesTool`)
-- DTOs use Symfony Validation constraints to define parameter rules
-- `SchemaGenerator` automatically converts these DTOs with their validation constraints into JSON Schema
-- This ensures type safety and validation at both the MCP protocol level and application level
-
-Example flow:
-1. `ListIssuesRequest` DTO defines `project_id` as required and positive integer
-2. `SchemaGenerator` reads the validation constraints and generates JSON Schema
-3. MCP uses this schema to validate inputs before calling the tool
-4. The tool also validates using Symfony Validator for double safety
-
 ## 🔧 Configuration Options
 
 ### Cache Settings
@@ -191,20 +144,21 @@ Example flow:
 
 ### Common Issues
 
-1. **"No tools available"**
-   - Check MCP configuration file path
-   - Verify PHP is in PATH
-   - Restart your AI assistant
+1. **"Connection refused" or "Server not accessible"**
+   - Verify HTTP server is running (`symfony server:start` or `php -S 127.0.0.1:8000`)
+   - Check the URL in `.mcp.json` matches your server address
+   - Ensure no firewall blocking the port
 
 2. **"Authentication failed"**
-   - Verify `REDMINE_URL` and `REDMINE_API_KEY`
+   - Verify `REDMINE_URL` and `REDMINE_API_KEY` in `.env`
    - Check API key permissions in Redmine
    - Ensure API is enabled in Redmine settings
 
-3. **"Command not found"**
-   - Check `args` path in MCP config (use absolute path)
-   - Verify `composer install` was run
-   - Check file permissions on bin/console
+3. **"Invalid token" (with OAuth2)**
+   - Verify Keycloak is running
+   - Check OAuth config in `.env` (KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_AUDIENCE)
+   - Reconnect the MCP client to get a fresh token
+   - See [OAuth2 Setup Guide](OAUTH_SETUP.md) for details
 
 ## 🔗 Related
 

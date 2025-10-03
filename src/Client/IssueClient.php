@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Client;
 
 use App\Api\RedmineService;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
-use SymfonyComponentDependencyInjectionAttributeAutoconfigure;
 /**
  * Client for issue-related Redmine operations.
  */

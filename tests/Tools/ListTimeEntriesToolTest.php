@@ -5,206 +5,106 @@ declare(strict_types=1);
 namespace App\Tests\Tools;
 
 use App\Client\TimeEntryClient;
-use App\SchemaGenerator;
 use App\Tools\ListTimeEntriesTool;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\AI\McpSdk\Capability\Tool\ToolCall;
-use Symfony\Component\Validator\Validation;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ListTimeEntriesToolTest extends TestCase
 {
-    private ListTimeEntriesTool $tool;
-    private TimeEntryClient|MockObject $timeEntryClient;
-    private ValidatorInterface $validator;
-
-    protected function setUp(): void
+    public function testListTimeEntriesReturnsArrayWithSummary(): void
     {
-        $this->timeEntryClient = $this->createMock(TimeEntryClient::class);
-        $this->validator = Validation::createValidatorBuilder()
-            ->enableAttributeMapping()
-            ->getValidator();
-
-        $this->tool = new ListTimeEntriesTool(
-            $this->timeEntryClient,
-            $this->validator,
-            new SchemaGenerator()
-        );
-    }
-
-    public function testGetName(): void
-    {
-        $this->assertEquals('redmine_list_time_entries', $this->tool->getName());
-    }
-
-    public function testGetDescription(): void
-    {
-        $this->assertStringContainsString('time entries', $this->tool->getDescription());
-        $this->assertStringContainsString('work hour analysis', $this->tool->getDescription());
-    }
-
-    public function testGetInputSchema(): void
-    {
-        $schema = $this->tool->getInputSchema();
-
-        $this->assertEquals('object', $schema['type']);
-        $this->assertArrayHasKey('properties', $schema);
-    }
-
-    public function testSuccessfulGetTimeEntries(): void
-    {
-        $mockTimeEntries = [
-            [
-                'id' => 1,
-                'hours' => 8.0,
-                'spent_on' => '2023-11-01',
-                'comments' => 'Development work',
-                'project' => ['id' => 1, 'name' => 'Test Project'],
-                'activity' => ['id' => 1, 'name' => 'Development'],
-                'created_on' => '2023-11-01T10:00:00Z',
-                'updated_on' => '2023-11-01T10:00:00Z',
-            ],
-            [
-                'id' => 2,
-                'hours' => 4.0,
-                'spent_on' => '2023-11-02',
-                'comments' => 'Bug fixing',
-                'project' => ['id' => 1, 'name' => 'Test Project'],
-                'activity' => ['id' => 2, 'name' => 'Debug'],
-                'created_on' => '2023-11-02T14:00:00Z',
-                'updated_on' => '2023-11-02T14:00:00Z',
-            ],
+        $mockEntries = [
+            ['id' => 1, 'hours' => 2.5, 'spent_on' => '2024-01-15', 'project' => ['name' => 'Project A']],
+            ['id' => 2, 'hours' => 3.0, 'spent_on' => '2024-01-15', 'project' => ['name' => 'Project A']],
+            ['id' => 3, 'hours' => 1.5, 'spent_on' => '2024-01-16', 'project' => ['name' => 'Project B']],
         ];
 
-        $this->timeEntryClient
-            ->expects($this->once())
+        $timeEntryClient = $this->createMock(TimeEntryClient::class);
+        $timeEntryClient->expects($this->once())
             ->method('getMyTimeEntries')
-            ->with(100, '2023-11-01', '2023-11-30', null)
-            ->willReturn($mockTimeEntries);
+            ->with(100, null, null, null)
+            ->willReturn($mockEntries);
 
-        $toolCall = new ToolCall(
-            id: 'test-1',
-            name: 'redmine_list_time_entries',
-            arguments: [
-                'from' => '2023-11-01',
-                'to' => '2023-11-30',
-            ]
-        );
+        $tool = new ListTimeEntriesTool($timeEntryClient);
+        $result = $tool->listTimeEntries();
 
-        $result = $this->tool->call($toolCall);
+        $this->assertArrayHasKey('time_entries', $result);
+        $this->assertArrayHasKey('summary', $result);
+        $this->assertArrayHasKey('period', $result);
 
-        $this->assertFalse($result->isError);
-        $this->assertEquals('application/json', $result->mimeType);
+        // Check summary
+        $this->assertEquals(7.0, $result['summary']['total_hours']);
+        $this->assertEquals(3, $result['summary']['total_entries']);
+        $this->assertEquals(2, $result['summary']['working_days']);
+        $this->assertEquals(3.5, $result['summary']['average_hours_per_day']);
 
-        $decoded = json_decode($result->result, true);
-        $this->assertIsArray($decoded);
-        $this->assertArrayHasKey('time_entries', $decoded);
-        $this->assertArrayHasKey('summary', $decoded);
+        // Check project breakdown
+        $this->assertEquals(5.5, $result['summary']['project_breakdown']['Project A']);
+        $this->assertEquals(1.5, $result['summary']['project_breakdown']['Project B']);
 
-        // Verify calculations
-        $summary = $decoded['summary'];
-        $this->assertEquals(12.0, $summary['total_hours']);
-        $this->assertEquals(2, $summary['total_entries']);
-        $this->assertEquals(2, $summary['working_days']);
-        $this->assertEquals(6.0, $summary['average_hours_per_day']);
-
-        // Verify breakdowns
-        $this->assertEquals(['Test Project' => 12.0], $summary['project_breakdown']);
-        $this->assertEquals(['2023-W44' => 12.0], $summary['weekly_breakdown']); // Both dates are in week 44 of 2023
-        $this->assertEquals(['2023-11-01' => 8.0, '2023-11-02' => 4.0], $summary['daily_breakdown']);
+        // Check daily breakdown
+        $this->assertEquals(5.5, $result['summary']['daily_breakdown']['2024-01-15']);
+        $this->assertEquals(1.5, $result['summary']['daily_breakdown']['2024-01-16']);
     }
 
-    public function testContractCompliant(): void
+    public function testListTimeEntriesWithDateFilter(): void
     {
-        $mockTimeEntries = array_fill(0, 5, [
-            'id' => 1,
-            'hours' => 7.0,
-            'spent_on' => '2023-11-01',
-            'comments' => 'Work',
-            'project' => ['id' => 1, 'name' => 'Project'],
-            'activity' => ['id' => 1, 'name' => 'Development'],
-            'created_on' => '2023-11-01T10:00:00Z',
-            'updated_on' => '2023-11-01T10:00:00Z',
-        ]);
-
-        $this->timeEntryClient
-            ->expects($this->once())
+        $timeEntryClient = $this->createMock(TimeEntryClient::class);
+        $timeEntryClient->expects($this->once())
             ->method('getMyTimeEntries')
-            ->willReturn($mockTimeEntries);
+            ->with(100, '2024-01-01', '2024-01-31', null)
+            ->willReturn([]);
 
-        $toolCall = new ToolCall(
-            id: 'test-2',
-            name: 'redmine_list_time_entries',
-            arguments: []
+        $tool = new ListTimeEntriesTool($timeEntryClient);
+        $result = $tool->listTimeEntries(
+            from: '2024-01-01',
+            to: '2024-01-31'
         );
 
-        $result = $this->tool->call($toolCall);
-        $decoded = json_decode($result->result, true);
-
-        $this->assertEquals(35.0, $decoded['summary']['total_hours']);
+        $this->assertEquals('2024-01-01', $result['period']['from']);
+        $this->assertEquals('2024-01-31', $result['period']['to']);
     }
 
-    public function testValidationError(): void
+    public function testListTimeEntriesWithProjectFilter(): void
     {
-        $toolCall = new ToolCall(
-            id: 'test-3',
-            name: 'redmine_list_time_entries',
-            arguments: [
-                'from' => 'invalid-date',
-                'limit' => -1,
-            ]
-        );
+        $timeEntryClient = $this->createMock(TimeEntryClient::class);
+        $timeEntryClient->expects($this->once())
+            ->method('getMyTimeEntries')
+            ->with(100, null, null, 42)
+            ->willReturn([]);
 
-        $result = $this->tool->call($toolCall);
+        $tool = new ListTimeEntriesTool($timeEntryClient);
+        $result = $tool->listTimeEntries(project_id: 42);
 
-        $this->assertTrue($result->isError);
-        $decoded = json_decode($result->result, true);
-        $this->assertFalse($decoded['success']);
-        $this->assertStringContainsString('Validation failed', $decoded['error']);
+        $this->assertEquals(42, $result['period']['project_filter']);
     }
 
-    public function testRepositoryException(): void
+    public function testListTimeEntriesHandlesEmptyArray(): void
     {
-        $this->timeEntryClient
-            ->expects($this->once())
+        $timeEntryClient = $this->createMock(TimeEntryClient::class);
+        $timeEntryClient->expects($this->once())
+            ->method('getMyTimeEntries')
+            ->willReturn([]);
+
+        $tool = new ListTimeEntriesTool($timeEntryClient);
+        $result = $tool->listTimeEntries();
+
+        $this->assertEquals(0, $result['summary']['total_hours']);
+        $this->assertEquals(0, $result['summary']['total_entries']);
+        $this->assertEquals(0, $result['summary']['working_days']);
+    }
+
+    public function testListTimeEntriesThrowsExceptionOnClientError(): void
+    {
+        $timeEntryClient = $this->createMock(TimeEntryClient::class);
+        $timeEntryClient->expects($this->once())
             ->method('getMyTimeEntries')
             ->willThrowException(new \RuntimeException('API Error'));
 
-        $toolCall = new ToolCall(
-            id: 'test-4',
-            name: 'redmine_list_time_entries',
-            arguments: []
-        );
+        $tool = new ListTimeEntriesTool($timeEntryClient);
 
-        $result = $this->tool->call($toolCall);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('API Error');
 
-        $this->assertTrue($result->isError);
-        $decoded = json_decode($result->result, true);
-        $this->assertFalse($decoded['success']);
-        $this->assertEquals('API Error', $decoded['error']);
-    }
-
-    public function testWithProjectFilter(): void
-    {
-        $this->timeEntryClient
-            ->expects($this->once())
-            ->method('getMyTimeEntries')
-            ->with(100, null, null, 123)
-            ->willReturn([]);
-
-        $toolCall = new ToolCall(
-            id: 'test-5',
-            name: 'redmine_list_time_entries',
-            arguments: [
-                'project_id' => 123,
-            ]
-        );
-
-        $result = $this->tool->call($toolCall);
-
-        $this->assertFalse($result->isError);
-        $decoded = json_decode($result->result, true);
-        $this->assertEquals(123, $decoded['period']['project_filter']);
+        $tool->listTimeEntries();
     }
 }

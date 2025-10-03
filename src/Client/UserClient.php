@@ -6,7 +6,7 @@ namespace App\Client;
 
 use App\Api\RedmineService;
 use App\Exception\RedmineException;
-use SymfonyComponentDependencyInjectionAttributeAutoconfigure;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
 /**
  * Client for user-related Redmine operations.

@@ -21,8 +21,6 @@ final class ListProjectsTool
 
     /**
      * List all Redmine projects the current user has access to.
-     *
-     * @return string
      */
     #[McpTool(
         name: 'redmine_list_projects',
@@ -31,7 +29,7 @@ final class ListProjectsTool
     public function listProjects(): string
     {
         $projects = $this->projectClient->getMyProjects();
-        return json_encode($projects, JSON_PRETTY_PRINT);
-    }
 
+        return json_encode($projects, JSON_PRETTY_PRINT) ?: '[]';
+    }
 }

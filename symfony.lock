@@ -5,12 +5,6 @@
             "version": "1.0"
         }
     },
-    "doctrine/doctrine-bundle": {
-        "version": "2.16.2"
-    },
-    "doctrine/doctrine-migrations-bundle": {
-        "version": "3.4.2"
-    },
     "friendsofphp/php-cs-fixer": {
         "version": "3.85",
         "recipe": {
@@ -109,6 +103,18 @@
             "config/packages/monolog.yaml"
         ]
     },
+    "symfony/property-info": {
+        "version": "7.3",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "7.3",
+            "ref": "dae70df71978ae9226ae915ffd5fad817f5ca1f7"
+        },
+        "files": [
+            "config/packages/property_info.yaml"
+        ]
+    },
     "symfony/routing": {
         "version": "7.3",
         "recipe": {
@@ -122,6 +128,19 @@
             "config/routes.yaml"
         ]
     },
+    "symfony/security-bundle": {
+        "version": "7.3",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "6.4",
+            "ref": "2ae08430db28c8eb4476605894296c82a642028f"
+        },
+        "files": [
+            "config/packages/security.yaml",
+            "config/routes/security.yaml"
+        ]
+    },
     "symfony/uid": {
         "version": "7.3",
         "recipe": {
@@ -129,12 +148,6 @@
             "branch": "main",
             "version": "7.0",
             "ref": "0df5844274d871b37fc3816c57a768ffc60a43a5"
-        }
-    },
-    "symfony/validator": {
-        "version": "7.3",
-        "recipe": {
-            "version": "7.0"
         }
     }
 }

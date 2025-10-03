@@ -1,7 +1,0 @@
-framework:
-    validation:
-        enabled: true
-        email_validation_mode: html5
-        
-        # Enable attribute support for validation  
-        enable_attributes: true

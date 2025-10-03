@@ -11,10 +11,7 @@ parameters:
     ignoreErrors:
         # Redmine API library is not fully typed
         - '#Call to an undefined method Redmine\\Api::#'
-        
-        # PHPUnit mocks in tests
-        - '#Call to an undefined method .*MockObject::expects#'
-        
-        # Schema array access in tests is safe
-        - '#Offset .* might not exist on array.*#'
+
+        # Symfony UserInterface returns string, PHPStan expects non-empty-string
+        - '#Method App\\Security\\JwtUser::getUserIdentifier\(\) should return non-empty-string but returns string#'
  

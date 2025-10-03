@@ -32,14 +32,4 @@ class RedmineException extends \RuntimeException
     {
         return new self('Authentication failed - check your API key', 401);
     }
-
-    public static function projectNotFound(int $projectId): self
-    {
-        return new self("Project #$projectId not found", 404, null, ['project_id' => $projectId]);
-    }
-
-    public static function issueNotFound(int $issueId): self
-    {
-        return new self("Issue #$issueId not found", 404, null, ['issue_id' => $issueId]);
-    }
 }

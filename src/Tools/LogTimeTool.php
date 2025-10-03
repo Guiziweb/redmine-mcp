@@ -22,10 +22,10 @@ final class LogTimeTool
     /**
      * Log time spent on a Redmine issue.
      *
-     * @param int         $issue_id    The issue ID to log time against
-     * @param float       $hours       Number of hours to log
-     * @param string      $comment     Comments for the time entry
-     * @param int|null    $activity_id Activity ID (use redmine_list_activities to get valid IDs)
+     * @param int      $issue_id    The issue ID to log time against
+     * @param float    $hours       Number of hours to log
+     * @param string   $comment     Comments for the time entry
+     * @param int|null $activity_id Activity ID (use redmine_list_activities to get valid IDs)
      *
      * @return array<string, mixed>
      */
@@ -37,7 +37,7 @@ final class LogTimeTool
         int $issue_id,
         float $hours,
         string $comment,
-        ?int $activity_id = null
+        ?int $activity_id = null,
     ): array {
         return $this->timeEntryClient->logTime(
             $issue_id,

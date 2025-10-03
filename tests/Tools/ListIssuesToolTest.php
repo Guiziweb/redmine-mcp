@@ -5,150 +5,76 @@ declare(strict_types=1);
 namespace App\Tests\Tools;
 
 use App\Client\IssueClient;
-use App\SchemaGenerator;
 use App\Tools\ListIssuesTool;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\AI\McpSdk\Capability\Tool\ToolCall;
-use Symfony\Component\Validator\Validation;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ListIssuesToolTest extends TestCase
 {
-    private ListIssuesTool $tool;
-    private IssueClient|MockObject $issueClient;
-    private ValidatorInterface $validator;
-    private SchemaGenerator $schemaGenerator;
-
-    protected function setUp(): void
-    {
-        $this->issueClient = $this->createMock(IssueClient::class);
-        $this->validator = Validation::createValidatorBuilder()
-            ->enableAttributeMapping()
-            ->getValidator();
-        $this->schemaGenerator = new SchemaGenerator();
-
-        $this->tool = new ListIssuesTool(
-            $this->issueClient,
-            $this->validator,
-            $this->schemaGenerator
-        );
-    }
-
-    public function testGetName(): void
-    {
-        $this->assertEquals('redmine_list_issues', $this->tool->getName());
-    }
-
-    public function testGetDescription(): void
-    {
-        $description = $this->tool->getDescription();
-        $this->assertStringContainsString('List Redmine issues', $description);
-        $this->assertStringContainsString('IMPORTANT', $description);
-        $this->assertStringContainsString('ASK THE USER', $description);
-    }
-
-    public function testGetInputSchema(): void
-    {
-        $schema = $this->tool->getInputSchema();
-
-        $this->assertArrayHasKey('type', $schema);
-        $this->assertEquals('object', $schema['type']);
-        $this->assertArrayHasKey('properties', $schema);
-        $this->assertArrayHasKey('required', $schema);
-
-        // Check required fields
-        $this->assertContains('project_id', $schema['required']);
-    }
-
-    public function testSuccessfulGetMyIssues(): void
+    public function testListIssuesReturnsArray(): void
     {
         $mockIssues = [
-            ['id' => 1, 'subject' => 'Test issue 1'],
-            ['id' => 2, 'subject' => 'Test issue 2'],
+            ['id' => 1, 'subject' => 'Issue 1', 'status' => ['name' => 'New']],
+            ['id' => 2, 'subject' => 'Issue 2', 'status' => ['name' => 'In Progress']],
         ];
 
-        $this->issueClient
-            ->expects($this->once())
+        $issueClient = $this->createMock(IssueClient::class);
+        $issueClient->expects($this->once())
             ->method('getMyIssues')
-            ->with(25, 123)
+            ->with(25, null)
             ->willReturn($mockIssues);
 
-        $input = new ToolCall(
-            id: 'test-call-1',
-            name: 'get_my_issues',
-            arguments: [
-                'project_id' => 123,
-                'limit' => 25,
-            ]
-        );
+        $tool = new ListIssuesTool($issueClient);
+        $result = $tool->listIssues();
 
-        $result = $this->tool->call($input);
-
-        $this->assertFalse($result->isError);
-        $this->assertEquals('application/json', $result->mimeType);
-
-        $response = json_decode($result->result, true);
-        $this->assertIsArray($response);
-        $this->assertCount(2, $response);
+        $this->assertCount(2, $result);
+        $this->assertEquals(1, $result[0]['id']);
+        $this->assertEquals('Issue 1', $result[0]['subject']);
     }
 
-    public function testValidationErrorMissingProjectId(): void
+    public function testListIssuesWithProjectFilter(): void
     {
-        $input = new ToolCall(
-            id: 'test-call-2',
-            name: 'get_my_issues',
-            arguments: [
-                // Missing project_id - should fail validation
-                'limit' => 25,
-            ]
-        );
+        $mockIssues = [
+            ['id' => 3, 'subject' => 'Issue 3', 'status' => ['name' => 'New']],
+        ];
 
-        $result = $this->tool->call($input);
+        $issueClient = $this->createMock(IssueClient::class);
+        $issueClient->expects($this->once())
+            ->method('getMyIssues')
+            ->with(25, 42)
+            ->willReturn($mockIssues);
 
-        $this->assertTrue($result->isError);
-        $response = json_decode($result->result, true);
-        $this->assertStringContainsString('Validation failed', $response['error']);
+        $tool = new ListIssuesTool($issueClient);
+        $result = $tool->listIssues(project_id: 42);
+
+        $this->assertCount(1, $result);
     }
 
-    public function testValidationErrorInvalidProjectId(): void
+    public function testListIssuesWithCustomLimit(): void
     {
-        $input = new ToolCall(
-            id: 'test-call-3',
-            name: 'get_my_issues',
-            arguments: [
-                'project_id' => 0, // Invalid: must be positive
-                'limit' => 25,
-            ]
-        );
+        $issueClient = $this->createMock(IssueClient::class);
+        $issueClient->expects($this->once())
+            ->method('getMyIssues')
+            ->with(50, null)
+            ->willReturn([]);
 
-        $result = $this->tool->call($input);
+        $tool = new ListIssuesTool($issueClient);
+        $result = $tool->listIssues(limit: 50);
 
-        $this->assertTrue($result->isError);
-        $response = json_decode($result->result, true);
-        $this->assertStringContainsString('Validation failed', $response['error']);
+        $this->assertEmpty($result);
     }
 
-    public function testRepositoryException(): void
+    public function testListIssuesThrowsExceptionOnClientError(): void
     {
-        $this->issueClient
-            ->expects($this->once())
+        $issueClient = $this->createMock(IssueClient::class);
+        $issueClient->expects($this->once())
             ->method('getMyIssues')
             ->willThrowException(new \RuntimeException('API Error'));
 
-        $input = new ToolCall(
-            id: 'test-call-4',
-            name: 'get_my_issues',
-            arguments: [
-                'project_id' => 123,
-                'limit' => 25,
-            ]
-        );
+        $tool = new ListIssuesTool($issueClient);
 
-        $result = $this->tool->call($input);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('API Error');
 
-        $this->assertTrue($result->isError);
-        $response = json_decode($result->result, true);
-        $this->assertEquals('API Error', $response['error']);
+        $tool->listIssues();
     }
 }

@@ -20,6 +20,7 @@
     "require": {
         "php": ">=8.2",
         "ext-ctype": "*",
+        "firebase/php-jwt": "^6.0",
         "kbsali/redmine-api": "^2.8",
         "laminas/laminas-httphandlerrunner": "^2.12",
         "mcp/sdk": "dev-main",
@@ -28,9 +29,11 @@
         "symfony/dotenv": "7.3.*",
         "symfony/flex": "^2",
         "symfony/framework-bundle": "7.3.*",
+        "symfony/http-client": "7.3.*",
         "symfony/monolog-bundle": "^3.10",
         "symfony/psr-http-message-bridge": "7.3.*",
         "symfony/runtime": "7.3.*",
+        "symfony/security-bundle": "7.3.*",
         "symfony/yaml": "7.3.*"
     },
     "require-dev": {
