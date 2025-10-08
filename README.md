@@ -2,13 +2,14 @@
 
 An MCP (Model Context Protocol) server that integrates Redmine with AI assistants like Claude Desktop, enabling natural language interaction with your Redmine instance.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Installation
 
 **Via Composer (Recommended):**
 ```bash
 composer create-project guiziweb/mcp-redmine --stability=dev
+cd mcp-redmine
 ```
 
 **Via Git (For Development):**
@@ -18,65 +19,39 @@ cd mcp-redmine
 composer install
 ```
 
-### 2. Configuration
+### 2. Get Your Redmine API Key
 
-> 💡 **Get your Redmine API key**: Go to Redmine → My account → API access key → Show
+Go to Redmine → My account → API access key → Show
 
-**Copy `.env.example` to `.env` and update it:**
-```bash
-cp .env.example .env
-```
+### 3. Configure MCP Client
 
-Then edit `.env`:
-```bash
-REDMINE_URL=https://your-redmine-instance.com
-REDMINE_API_KEY=your_api_key_here
-```
+Edit your `.mcp.json` (usually at `~/.config/claude-code/.mcp.json`):
 
-**Start the HTTP server:**
-```bash
-symfony server:start
-# or
-php -S 127.0.0.1:8000 -t public
-```
-
-**Configure MCP Client:**
-
-Create a `.mcp.json` file:
 ```json
 {
   "mcpServers": {
     "redmine": {
-      "url": "http://127.0.0.1:8000/mcp",
-      "transport": "http"
+      "type": "stdio",
+      "command": "/opt/homebrew/bin/php",
+      "args": ["/absolute/path/to/mcp-redmine/bin/console", "mcp:serve"],
+      "env": {
+        "REDMINE_URL": "https://your-redmine-instance.com",
+        "REDMINE_API_KEY": "your_api_key_here"
+      }
     }
   }
 }
 ```
 
-### 3. Restart Your AI Assistant
+**Important:**
+- Use absolute path for PHP: `which php` to find it (usually `/opt/homebrew/bin/php` on macOS)
+- Replace `/absolute/path/to/mcp-redmine` with the actual path to this project (use `pwd` in project directory)
 
-Close and restart your MCP client (Claude Desktop, Cursor, etc.).
+### 4. Restart Claude Code
 
-## 🔐 Remote Access with OAuth2 (Team Sharing)
+Quit and restart Claude Code to load the MCP server.
 
-Want to share your MCP server with your team? Secure it with OAuth2 + Keycloak!
-
-**Benefits:**
-- 🌐 **Remote access**: Deploy once, use from anywhere
-- 👥 **Team sharing**: Multiple users, centralized authentication
-- 🔒 **Access control**: Restrict by email domain, groups, roles
-- 📊 **Audit trail**: Track who does what
-
-**Quick Setup:**
-1. Start Keycloak with Docker
-2. Configure realm with Dynamic Client Registration (DCR)
-3. Update MCP server `.env` with Keycloak credentials
-4. Clients auto-register and authenticate via browser
-
-👉 **[Complete OAuth2 Setup Guide](docs/OAUTH_SETUP.md)**
-
-## ✨ Features
+## Features
 
 ### Available Tools
 
@@ -95,7 +70,7 @@ Want to share your MCP server with your team? Secure it with OAuth2 + Keycloak!
 - **Work Analysis**: Hours per day, project breakdowns, weekly patterns
 - **Caching**: Projects and activities cached for performance
 
-## 🛠 Development
+## Development
 
 ### Requirements
 
@@ -130,7 +105,7 @@ vendor/bin/phpstan analyze
 vendor/bin/php-cs-fixer fix
 ```
 
-## 🔧 Configuration Options
+## Configuration Options
 
 ### Cache Settings
 
@@ -139,33 +114,27 @@ vendor/bin/php-cs-fixer fix
 - **Issues**: No cache (change frequently)
 - **Time entries**: No cache (real-time data)
 
-## 🚨 Security
+## Security
 
-- ✅ Environment-based configuration
-- ✅ Validation on all inputs
-- ✅ Error handling without data exposure
+- Environment-based configuration
+- Validation on all inputs
+- Error handling without data exposure
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
-1. **"Connection refused" or "Server not accessible"**
-   - Verify HTTP server is running (`symfony server:start` or `php -S 127.0.0.1:8000`)
-   - Check the URL in `.mcp.json` matches your server address
-   - Ensure no firewall blocking the port
+1. **MCP server not connecting**
+   - Verify the command path in `.mcp.json` is absolute (use `pwd` to get the full path)
+   - Test the command manually: `php /path/to/bin/console mcp:serve`
+   - Restart Claude Code after any configuration change
 
 2. **"Authentication failed"**
-   - Verify `REDMINE_URL` and `REDMINE_API_KEY` in `.env`
-   - Check API key permissions in Redmine
-   - Ensure API is enabled in Redmine settings
+   - Verify `REDMINE_URL` and `REDMINE_API_KEY` in `.mcp.json` are correct
+   - Check API key permissions in Redmine (My account → API access key)
+   - Ensure API is enabled in Redmine settings (Administration → Settings → API)
 
-3. **"Invalid token" (with OAuth2)**
-   - Verify Keycloak is running
-   - Check OAuth config in `.env` (KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_AUDIENCE)
-   - Reconnect the MCP client to get a fresh token
-   - See [OAuth2 Setup Guide](OAUTH_SETUP.md) for details
-
-## 🔗 Related
+## Related
 
 - [Model Context Protocol](https://github.com/anthropics/mcp)
 - [Claude Desktop](https://claude.ai/desktop)

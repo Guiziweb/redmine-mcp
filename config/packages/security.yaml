@@ -5,30 +5,22 @@ security:
 
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        jwt_user_provider:
-            id: App\Security\JwtUserProvider
+        users_in_memory: { memory: null }
 
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
-        # OAuth discovery endpoint - no auth required
-        oauth_discovery:
-            pattern: ^/\.well-known/
-            security: false
-
-        # MCP endpoint - JWT auth required
-        mcp:
-            pattern: ^/mcp
-            stateless: true
-            custom_authenticators:
-                - App\Security\JwtAuthenticator
+        main:
+            lazy: true
+            provider: users_in_memory
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - { path: ^/\.well-known/, roles: PUBLIC_ACCESS }
+        # - { path: ^/admin, roles: ROLE_ADMIN }
+        # - { path: ^/profile, roles: ROLE_USER }
 
 when@test:
     security:

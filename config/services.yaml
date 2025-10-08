@@ -16,15 +16,6 @@ services:
     App\:
         resource: '../src/'
 
-    # Inject service_container and OAuth config
-    App\Controller\McpController:
-        arguments:
-            $serviceContainer: '@service_container'
-            $keycloakUrl: '%env(KEYCLOAK_URL)%'
-            $keycloakRealm: '%env(KEYCLOAK_REALM)%'
-            $keycloakAudience: '%env(KEYCLOAK_AUDIENCE)%'
-            $projectDir: '%kernel.project_dir%'
-
     # Tag all MCP tools
     App\Tools\:
         resource: '../src/Tools/'
@@ -36,9 +27,8 @@ services:
             $redmineUrl: '%env(REDMINE_URL)%'
             $redmineApiKey: '%env(REDMINE_API_KEY)%'
 
-    # Keycloak JWT Validator
-    App\Service\KeycloakJwtValidator:
+    # MCP stdio command
+    App\Command\McpServeCommand:
         arguments:
-            $keycloakUrl: '%env(KEYCLOAK_URL)%'
-            $keycloakRealm: '%env(KEYCLOAK_REALM)%'
-            $keycloakAudience: '%env(KEYCLOAK_AUDIENCE)%'
+            $serviceContainer: '@service_container'
+            $projectDir: '%kernel.project_dir%'
