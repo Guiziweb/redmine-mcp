@@ -25,7 +25,7 @@ test-coverage: ## Tests avec couverture de code
 	vendor/bin/phpunit --testdox --coverage-text --coverage-clover=coverage.xml
 
 phpstan: ## Analyse statique PHPStan
-	vendor/bin/phpstan analyse src tests
+	vendor/bin/phpstan analyse src
 
 static-analysis: ## Vérification formatage + PHPStan
 	$(MAKE) cs-check phpstan

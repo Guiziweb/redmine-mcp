@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tools;
 
-use App\Client\TimeEntryClient;
+use App\Domain\Service\TimeEntryService;
 use Mcp\Capability\Attribute\McpTool;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
@@ -12,84 +12,99 @@ use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 final class ListTimeEntriesTool
 {
     public function __construct(
-        private readonly TimeEntryClient $timeEntryClient,
+        private readonly TimeEntryService $timeEntryService,
     ) {
     }
 
     /**
      * Get my time entries with optional date filtering and total calculation.
      *
-     * @param int         $limit      Maximum number of entries to return (default: 100)
-     * @param string|null $from       Start date (YYYY-MM-DD)
-     * @param string|null $to         End date (YYYY-MM-DD)
-     * @param int|null    $project_id Filter by project ID
+     * Perfect for monthly time tracking and work hour analysis.
+     * Returns daily, weekly, and project breakdowns.
+     *
+     * @param string|null $from Start date (YYYY-MM-DD)
+     * @param string|null $to   End date (YYYY-MM-DD)
      *
      * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'redmine_list_time_entries',
-        description: 'Get my time entries with optional date filtering and total calculation. Perfect for monthly time tracking and work hour analysis.'
-    )]
+    #[McpTool(name: 'list_time_entries')]
     public function listTimeEntries(
-        int $limit = 100,
         ?string $from = null,
         ?string $to = null,
-        ?int $project_id = null,
     ): array {
-        $timeEntries = $this->timeEntryClient->getMyTimeEntries(
-            $limit,
-            $from,
-            $to,
-            $project_id
-        );
+        try {
+            // Parse dates
+            $fromDate = $from ? new \DateTime($from) : new \DateTime('-30 days');
+            $toDate = $to ? new \DateTime($to) : new \DateTime('today');
 
-        // Calculate totals
-        $totalHours = 0.0;
-        $projectTotals = [];
-        $weeklyTotals = [];
-        $dailyTotals = [];
+            // Get aggregated data
+            $byDay = $this->timeEntryService->getEntriesByDay($fromDate, $toDate);
+            $byProject = $this->timeEntryService->getEntriesByProject($fromDate, $toDate);
 
-        foreach ($timeEntries as $entry) {
-            $hours = $entry['hours'];
-            $totalHours += $hours;
+            // Calculate totals
+            $totalHours = 0.0;
+            $totalEntries = 0;
+            $weeklyTotals = [];
 
-            // Group by project
-            if ($entry['project']) {
-                $projectName = $entry['project']['name'];
-                $projectTotals[$projectName] = ($projectTotals[$projectName] ?? 0) + $hours;
+            foreach ($byDay as $day) {
+                $totalHours += $day['hours'];
+                $totalEntries += count($day['entries']);
+
+                // Group by week (ISO 8601: YYYY-W##)
+                $weekKey = (new \DateTime($day['date']))->format('Y-\WW');
+                $weeklyTotals[$weekKey] = ($weeklyTotals[$weekKey] ?? 0) + $day['hours'];
             }
 
-            // Group by week (ISO 8601: YYYY-W##)
-            $date = $entry['spent_on'];
-            if ($date) {
-                $weekKey = date('Y-\WW', strtotime($date));
-                $weeklyTotals[$weekKey] = ($weeklyTotals[$weekKey] ?? 0) + $hours;
+            // Format daily breakdown
+            $dailyBreakdown = [];
+            foreach ($byDay as $day) {
+                $dailyBreakdown[$day['date']] = [
+                    'hours' => round($day['hours'], 2),
+                    'entries' => array_map(
+                        fn ($entry) => [
+                            'id' => $entry->id,
+                            'issue_id' => $entry->issue->id,
+                            'issue_title' => $entry->issue->title,
+                            'project' => $entry->issue->project->name,
+                            'hours' => $entry->getHours(),
+                            'comment' => $entry->comment,
+                            'activity' => $entry->activity?->name,
+                        ],
+                        $day['entries']
+                    ),
+                ];
             }
 
-            // Group by day
-            $dailyTotals[$date] = ($dailyTotals[$date] ?? 0) + $hours;
+            // Format project breakdown
+            $projectBreakdown = [];
+            foreach ($byProject as $project) {
+                $projectBreakdown[$project['project_name']] = round($project['hours'], 2);
+            }
+
+            $workingDays = count($byDay);
+            $averageHoursPerDay = $workingDays > 0 ? $totalHours / $workingDays : 0;
+
+            return [
+                'success' => true,
+                'summary' => [
+                    'total_hours' => round($totalHours, 2),
+                    'total_entries' => $totalEntries,
+                    'working_days' => $workingDays,
+                    'average_hours_per_day' => round($averageHoursPerDay, 2),
+                    'project_breakdown' => $projectBreakdown,
+                    'weekly_breakdown' => array_map(fn ($h) => round($h, 2), $weeklyTotals),
+                ],
+                'daily_breakdown' => $dailyBreakdown,
+                'period' => [
+                    'from' => $fromDate->format('Y-m-d'),
+                    'to' => $toDate->format('Y-m-d'),
+                ],
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
         }
-
-        // Calculate working days statistics
-        $workingDays = count($dailyTotals);
-        $averageHoursPerDay = $workingDays > 0 ? $totalHours / $workingDays : 0;
-
-        return [
-            'time_entries' => $timeEntries,
-            'summary' => [
-                'total_hours' => round($totalHours, 2),
-                'total_entries' => count($timeEntries),
-                'working_days' => $workingDays,
-                'average_hours_per_day' => round($averageHoursPerDay, 2),
-                'project_breakdown' => array_map(fn ($h) => round($h, 2), $projectTotals),
-                'weekly_breakdown' => array_map(fn ($h) => round($h, 2), $weeklyTotals),
-                'daily_breakdown' => array_map(fn ($h) => round($h, 2), $dailyTotals),
-            ],
-            'period' => [
-                'from' => $from,
-                'to' => $to,
-                'project_filter' => $project_id,
-            ],
-        ];
     }
 }

@@ -1,74 +1,112 @@
 # MCP Redmine Server
 
-An MCP (Model Context Protocol) server that integrates Redmine with AI assistants like Claude Desktop, enabling natural language interaction with your Redmine instance.
+A secure, multi-user MCP (Model Context Protocol) server that integrates Redmine with AI assistants like Claude Desktop and Claude Code. Features OAuth2 authentication, encrypted credentials, and natural language interaction with your Redmine instance.
+
+## Features
+
+- **OAuth2 Authentication**: Secure Google Sign-In for team authentication
+- **Multi-user Support**: Each user has their own Redmine credentials
+- **Encrypted Storage**: Credentials encrypted with Sodium (AES-256 equivalent)
+- **Email Whitelist**: Domain-based access control (configurable)
+- **HTTP Transport**: REST API with JWT tokens
+- **Smart Time Tracking**: Natural language time logging with automatic summaries
 
 ## Quick Start
 
-### 1. Installation
+### For Users (Claude Desktop / Claude Code)
 
-**Via Composer (Recommended):**
-```bash
-composer create-project guiziweb/mcp-redmine --stability=dev
-cd mcp-redmine
-```
+#### 1. Get the Server URL
 
-**Via Git (For Development):**
-```bash
-git clone https://github.com/guiziweb/mcp-redmine.git
-cd mcp-redmine
-composer install
-```
+Ask your administrator for:
+- Server URL (e.g., `https://mcp-redmine.onrender.com`)
+- Confirm your email is whitelisted
 
-### 2. Get Your Redmine API Key
+#### 2. Configure Claude Desktop
 
-Go to Redmine → My account → API access key → Show
-
-### 3. Configure MCP Client
-
-Edit your `.mcp.json` (usually at `~/.config/claude-code/.mcp.json`):
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "redmine": {
-      "type": "stdio",
-      "command": "/opt/homebrew/bin/php",
-      "args": ["/absolute/path/to/mcp-redmine/bin/console", "mcp:serve"],
-      "env": {
-        "REDMINE_URL": "https://your-redmine-instance.com",
-        "REDMINE_API_KEY": "your_api_key_here"
-      }
+      "url": "https://mcp-redmine.onrender.com"
     }
   }
 }
 ```
 
-**Important:**
-- Use absolute path for PHP: `which php` to find it (usually `/opt/homebrew/bin/php` on macOS)
-- Replace `/absolute/path/to/mcp-redmine` with the actual path to this project (use `pwd` in project directory)
+#### 3. Configure Claude Code
 
-### 4. Restart Claude Code
+Edit `~/.config/claude-code/.mcp.json`:
 
-Quit and restart Claude Code to load the MCP server.
+```json
+{
+  "mcpServers": {
+    "redmine": {
+      "url": "https://mcp-redmine.onrender.com"
+    }
+  }
+}
+```
 
-## Features
+#### 4. Restart and Authenticate
 
-### Available Tools
+1. Restart Claude Desktop/Code
+2. First use will redirect you to Google Sign-In
+3. After authentication, provide your Redmine URL and API key
+4. Done! You can now interact with Redmine
 
-| Tool | Description | Parameters | Example Prompts |
-|------|-------------|------------|-----------------|
-| `redmine_list_projects` | Lists all your accessible Redmine projects with their hierarchy and IDs | None | • "Show me all my Redmine projects"<br>• "List my projects"<br>• "What projects do I have access to?" |
-| `redmine_list_issues` | Lists issues from ONE specific project. Always shows the project list first and asks which project you want | • **project_id** (required): The project ID<br>• **limit** (optional): Max results (1-100, default: 25) | • "Show issues from project Mobile App"<br>• "List my tasks on project #123"<br>• "What tickets are assigned to me on project X?" |
-| `redmine_get_issue_details` | Get detailed information about a specific Redmine issue by its ID. Returns comprehensive issue data including description, status, priority, assignee, dates, attachments, and more | • **issue_id** (required): The issue ID<br>• **include** (optional): Additional data to include (children, attachments, relations, changesets, journals, watchers, allowed_statuses) | • "Show me details of issue #123"<br>• "Get full information about ticket #456"<br>• "Show issue #789 with attachments and journals" |
-| `redmine_list_time_entries` | Retrieves your time entries with smart filtering, totals, and work analysis (daily/weekly/project breakdowns) | • **from** (optional): Start date (YYYY-MM-DD)<br>• **to** (optional): End date (YYYY-MM-DD)<br>• **limit** (optional): Max results (1-100, default: 100)<br>• **project_id** (optional): Filter by project | • "Show my hours from August 1st to August 31st"<br>• "Show my time entries for last week"<br>• "What's my daily average this month?"<br>• "Get my hours by project" |
-| `redmine_log_time` | Logs time to a specific issue. Will ask you for each parameter interactively (hours, comment, activity type) | • **issue_id** (required): The issue ID<br>• **hours** (required): Hours worked (0.1-24)<br>• **comment** (required): Work description (max 1000 chars)<br>• **activity_id** (required): Activity type ID | • "Log 2 hours to issue #123"<br>• "Add time to ticket #456"<br>• "I worked 3.5 hours on issue #789" |
+### For Administrators (Deployment)
+
+Deploy on Render.com (free tier) using the included `render.yaml` blueprint. See Google OAuth Configuration section below for setup instructions.
+
+## Available Tools
+
+| Tool | Description | Example Prompts |
+|------|-------------|-----------------|
+| **List Projects** | Show all accessible Redmine projects | "Show my projects", "List all projects" |
+| **List Issues** | List issues from a specific project | "Show issues from Mobile App project", "List tickets in #123" |
+| **Get Issue Details** | Get comprehensive issue information | "Show details of issue #456", "Get issue #789 with journals" |
+| **List Time Entries** | Retrieve time entries with smart filtering | "Show my hours this week", "Time entries from August", "My daily average" |
+| **Log Time** | Log time to an issue interactively | "Log 2 hours to issue #123", "Add time to ticket #456" |
+| **List Activities** | Show available time entry activities | "Show activity types", "What activities can I log?" |
 
 ### Smart Features
 
-- **Date Intelligence**: "Show my time for last month", "August 2025 entries"
-- **Smart Summaries**: Automatic totals, weekly/daily breakdowns
-- **Work Analysis**: Hours per day, project breakdowns, weekly patterns
-- **Caching**: Projects and activities cached for performance
+- **Date Intelligence**: "last week", "this month", "August 2025"
+- **Automatic Summaries**: Total hours, daily/weekly breakdowns
+- **Work Analysis**: Hours per day, project breakdowns, patterns
+- **Interactive**: Will ask for missing parameters
+
+## Architecture
+
+```mermaid
+graph TB
+    Client[Claude Client<br/>Desktop/Code]
+
+    subgraph Server["MCP Redmine Server"]
+        OAuth[OAuth2 Controller<br/>Google Sign-In + Email Whitelist]
+        DB[(DoctrineUserCredentialRepository<br/>Database + Sodium encryption<br/>SQLite dev / PostgreSQL prod)]
+        Factory[UserRedmineProviderFactory<br/>Per-user Redmine clients]
+    end
+
+    Redmine[Redmine API<br/>Your Instance]
+
+    Client -->|HTTP + JWT| OAuth
+    OAuth --> DB
+    DB --> Factory
+    Factory --> Redmine
+
+    style Client fill:#e1f5ff
+    style Server fill:#f5f5f5
+    style Redmine fill:#ffe1e1
+```
+
+**Key Components:**
+- **OAuth2 Controller**: Handles Google authentication and email whitelist verification
+- **Credential Repository**: Stores encrypted Redmine credentials (URL + API key) per user
+- **Provider Factory**: Creates per-user Redmine API clients on-demand
+- **Encryption**: Credentials encrypted at rest with Sodium (XSalsa20-Poly1305)
 
 ## Development
 
@@ -76,11 +114,42 @@ Quit and restart Claude Code to load the MCP server.
 
 - PHP 8.2+
 - Composer
-- Access to a Redmine instance with API enabled
+- Sodium extension
+- Access to Redmine instance with API enabled
 
-### Api
+### Local Setup
 
-- **Redmine API Client**: [kbsali/redmine-api](https://github.com/kbsali/php-redmine-api) v2.8+ - A comprehensive PHP library for Redmine API
+```bash
+# Clone repository
+git clone https://github.com/guiziweb/mcp-redmine.git
+cd mcp-redmine
+
+# Install dependencies
+composer install
+
+# Configure environment
+cp .env.example .env.local
+# Edit .env.local with your settings
+
+# Generate encryption key
+php -r "echo base64_encode(random_bytes(SODIUM_CRYPTO_SECRETBOX_KEYBYTES)) . PHP_EOL;"
+
+# Start development server (with ngrok for OAuth callback)
+ngrok http 8000
+php -S localhost:8000 -t public/
+```
+
+### Environment Variables
+
+**Required:**
+- `APP_URL`: Your server URL (ngrok for dev, custom domain for prod)
+- `GOOGLE_CLIENT_ID`: From Google Cloud Console
+- `GOOGLE_CLIENT_SECRET`: From Google Cloud Console
+- `ENCRYPTION_KEY`: Base64-encoded 32-byte Sodium key
+- `JWT_SECRET`: Random string for JWT signing
+
+**Optional:**
+- `APP_ENV`: `dev` or `prod` (default: `dev`)
 
 ### Testing
 
@@ -91,13 +160,6 @@ composer test
 # Run specific test
 vendor/bin/phpunit tests/Tools/ListProjectsToolTest.php
 
-# Run with coverage
-vendor/bin/phpunit --coverage-html coverage
-```
-
-### Code Quality
-
-```bash
 # Static analysis
 vendor/bin/phpstan analyze
 
@@ -105,37 +167,82 @@ vendor/bin/phpstan analyze
 vendor/bin/php-cs-fixer fix
 ```
 
-## Configuration Options
+## Google OAuth Configuration
 
-### Cache Settings
+### 1. Create Google Cloud Project
 
-- **Projects**: 24 hours (rarely change)
-- **Activities**:24 hours (rarely change)
-- **Issues**: No cache (change frequently)
-- **Time entries**: No cache (real-time data)
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create new project: "MCP Redmine"
+3. Enable Google+ API
 
-## Security
+### 2. Configure OAuth Consent Screen
 
-- Environment-based configuration
-- Validation on all inputs
-- Error handling without data exposure
+1. APIs & Services → OAuth consent screen
+2. User Type: **External**
+3. App name: "MCP Redmine"
+4. Scopes: `email`, `profile` (non-sensitive, no validation required)
+5. Test users: Add your team emails (or skip if using domain whitelist)
+
+### 3. Create OAuth2 Credentials
+
+1. APIs & Services → Credentials → Create Credentials → OAuth 2.0 Client ID
+2. Application type: **Web application**
+3. Authorized redirect URIs:
+   - Development: `https://your-ngrok-url.ngrok-free.dev/oauth/google-callback`
+   - Production: `https://mcp-redmine.onrender.com/oauth/google-callback`
+4. Save and copy Client ID and Client Secret
+
+### 4. Email Whitelist
+
+Configure allowed users via environment variables in `.env.local` or Render dashboard:
+
+```bash
+# Allow entire domains (comma-separated)
+ALLOWED_EMAIL_DOMAINS=example.com
+
+# Allow specific emails (comma-separated)
+ALLOWED_EMAILS=alice@example.com,bob@example.com
+```
+
+Both options can be combined. If neither is set, no users will be able to access the application.
 
 ## Troubleshooting
 
-### Common Issues
+### "Email not authorized"
+Your email is not in the whitelist. Contact your administrator.
 
-1. **MCP server not connecting**
-   - Verify the command path in `.mcp.json` is absolute (use `pwd` to get the full path)
-   - Test the command manually: `php /path/to/bin/console mcp:serve`
-   - Restart Claude Code after any configuration change
+### "No credentials found for user"
+First-time users need to authenticate via OAuth and provide Redmine credentials.
 
-2. **"Authentication failed"**
-   - Verify `REDMINE_URL` and `REDMINE_API_KEY` in `.mcp.json` are correct
-   - Check API key permissions in Redmine (My account → API access key)
-   - Ensure API is enabled in Redmine settings (Administration → Settings → API)
+### OAuth redirect fails
+- Verify `APP_URL` matches your actual server URL
+- Check Google Console redirect URIs match exactly
+- Ensure OAuth2 credentials are correct in environment
+
+### "Service unavailable" in production
+- Check server logs
+- Verify all environment variables are set
+- Ensure encryption key is properly configured
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Run tests and code quality checks
+4. Submit a pull request
+
+## License
+
+MIT
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/guiziweb/mcp-redmine/issues)
 
 ## Related
 
 - [Model Context Protocol](https://github.com/anthropics/mcp)
 - [Claude Desktop](https://claude.ai/desktop)
-- [Redmine API Documentation](https://www.redmine.org/projects/redmine/wiki/Rest_api)
+- [Claude Code](https://docs.claude.com/claude-code)
+- [Redmine API](https://www.redmine.org/projects/redmine/wiki/Rest_api)

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authorize MCP Redmine Access</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            margin-top: 0;
+            color: #333;
+            font-size: 24px;
+        }
+        .info {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .error {
+            background: #f8e8e8;
+            color: #c33;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4a9eff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #3a8eef;
+        }
+        .help-text {
+            font-size: 12px;
+            color: #777;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Connect Your Redmine</h1>
+
+        <div class="info">
+            {% if google_user_name is defined %}
+                <p><strong>Signed in as:</strong> {{ google_user_name }} ({{ google_user_email }})</p>
+            {% endif %}
+            <p><strong>Claude Desktop</strong> is requesting access to your Redmine instance to help you track time and manage issues.</p>
+        </div>
+
+        {% if error is defined %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ path('oauth_google_callback') }}">
+
+            <div class="form-group">
+                <label for="redmine_url">Redmine URL</label>
+                <input type="text"
+                       id="redmine_url"
+                       name="redmine_url"
+                       placeholder="https://redmine.example.com"
+                       required>
+                <div class="help-text">The full URL of your Redmine instance (without trailing slash)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="redmine_api_key">API Key</label>
+                <input type="text"
+                       id="redmine_api_key"
+                       name="redmine_api_key"
+                       placeholder="Your Redmine API key"
+                       required>
+                <div class="help-text">Find your API key in: My account → API access key (right column)</div>
+            </div>
+
+            <button type="submit">Authorize Access</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -4,35 +4,60 @@ declare(strict_types=1);
 
 namespace App\Tools;
 
-use App\Client\IssueClient;
+use App\Domain\Provider\TimeTrackingProviderInterface;
 use Mcp\Capability\Attribute\McpTool;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
-/**
- * MCP tool to list user's Redmine issues.
- */
 #[Autoconfigure(public: true)]
 final class ListIssuesTool
 {
     public function __construct(
-        private readonly IssueClient $issueClient,
+        private readonly TimeTrackingProviderInterface $provider,
     ) {
     }
 
     /**
-     * List Redmine issues assigned to current user.
+     * List issues assigned to current user from ONE specific project.
      *
-     * @param int|null $project_id Filter by project ID
+     * Use list_projects tool first to get the list of available projects,
+     * then ASK THE USER which project they want to see issues for,
+     * and call this tool with that single project_id.
+     *
+     * @param int|null $project_id Filter by project ID (use list_projects tool to get valid project IDs)
      * @param int      $limit      Maximum number of issues to return (default: 25)
      *
-     * @return array<string, mixed>[]
+     * @return array<string, mixed>
      */
-    #[McpTool(
-        name: 'redmine_list_issues',
-        description: 'List Redmine issues from ONE specific project. IMPORTANT: You must ASK THE USER which project they want to see issues for (show them the list from redmine_list_projects first), then call this tool with that single project_id. Do NOT try to fetch issues from multiple projects automatically.'
-    )]
+    #[McpTool(name: 'list_issues')]
     public function listIssues(?int $project_id = null, int $limit = 25): array
     {
-        return $this->issueClient->getMyIssues($limit, $project_id);
+        try {
+            $issues = $this->provider->getIssues($project_id, $limit);
+
+            return [
+                'success' => true,
+                'issues' => array_map(
+                    fn ($issue) => [
+                        'id' => $issue->id,
+                        'title' => $issue->title,
+                        'description' => $issue->description,
+                        'status' => $issue->status,
+                        'project' => [
+                            'id' => $issue->project->id,
+                            'name' => $issue->project->name,
+                        ],
+                        'assignee' => $issue->assignee,
+                        'tracker' => $issue->tracker,
+                        'priority' => $issue->priority,
+                    ],
+                    $issues
+                ),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 }

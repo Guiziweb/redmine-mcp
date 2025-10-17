@@ -21,14 +21,35 @@ services:
         resource: '../src/Tools/'
         tags: ['mcp.tool']
 
-    # Redmine service with credentials from environment
-    App\Api\RedmineService:
-        arguments:
-            $redmineUrl: '%env(REDMINE_URL)%'
-            $redmineApiKey: '%env(REDMINE_API_KEY)%'
+    # Default time tracking provider (current user's provider)
+    App\Domain\Provider\TimeTrackingProviderInterface:
+        alias: App\Infrastructure\Provider\CurrentUserProviderService
 
-    # MCP stdio command
-    App\Command\McpServeCommand:
+    # User credential repository - Database storage (SQLite local, PostgreSQL prod)
+    App\Infrastructure\Security\UserCredentialRepository:
+        class: App\Infrastructure\Security\DoctrineUserCredentialRepository
+        arguments:
+            $em: '@doctrine.orm.entity_manager'
+            $encryption: '@App\Infrastructure\Security\EncryptionService'
+
+    # JWT token validator
+    App\Infrastructure\Security\JwtTokenValidator:
+        arguments:
+            $jwtSecret: '%env(JWT_SECRET)%'
+
+    # Google OAuth2 authentication service
+    App\Infrastructure\Security\GoogleAuthService:
+        arguments:
+            $googleClientId: '%env(GOOGLE_CLIENT_ID)%'
+            $googleClientSecret: '%env(GOOGLE_CLIENT_SECRET)%'
+            $redirectUri: '%env(APP_URL)%/oauth/google-callback'
+
+    # Encryption service for sensitive data
+    App\Infrastructure\Security\EncryptionService:
+        arguments:
+            $encryptionKey: '%env(ENCRYPTION_KEY)%'
+
+    # MCP Controller needs full container access for tool discovery
+    App\Controller\McpController:
         arguments:
             $serviceContainer: '@service_container'
-            $projectDir: '%kernel.project_dir%'

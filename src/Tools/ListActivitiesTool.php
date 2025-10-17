@@ -9,7 +9,7 @@ use Mcp\Capability\Attribute\McpTool;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
 #[Autoconfigure(public: true)]
-final readonly class ListProjectsTool
+final readonly class ListActivitiesTool
 {
     public function __construct(
         private TimeTrackingProviderInterface $provider,
@@ -17,28 +17,26 @@ final readonly class ListProjectsTool
     }
 
     /**
-     * List all projects the current user has access to.
+     * List all available time entry activities.
      *
      * @return array<string, mixed>
      */
-    #[McpTool(name: 'list_projects')]
-    public function listProjects(): array
+    #[McpTool(name: 'list_activities')]
+    public function listActivities(): array
     {
         try {
-            $projects = $this->provider->getProjects();
+            $activities = $this->provider->getActivities();
 
             return [
                 'success' => true,
-                'projects' => array_map(
-                    fn ($project) => [
-                        'id' => $project->id,
-                        'name' => $project->name,
-                        'parent' => $project->parent ? [
-                            'id' => $project->parent->id,
-                            'name' => $project->parent->name,
-                        ] : null,
+                'activities' => array_map(
+                    fn ($activity) => [
+                        'id' => $activity->id,
+                        'name' => $activity->name,
+                        'is_default' => $activity->isDefault,
+                        'active' => $activity->active,
                     ],
-                    $projects
+                    $activities
                 ),
             ];
         } catch (\Throwable $e) {
