@@ -50,5 +50,6 @@ USER app
 # Expose port (Render uses $PORT env var)
 EXPOSE ${PORT:-8080}
 
-# Start PHP built-in server
-CMD php -S 0.0.0.0:${PORT:-8080} -t public/
+# Start: run migrations then start server
+CMD php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration && \
+    php -S 0.0.0.0:${PORT:-8080} -t public/
