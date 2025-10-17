@@ -5,12 +5,14 @@ RUN apk add --no-cache \
     git \
     unzip \
     libsodium-dev \
+    postgresql-dev \
     nginx \
     supervisor
 
 # Install PHP extensions
 RUN docker-php-ext-install \
-    sodium
+    sodium \
+    pdo_pgsql
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
