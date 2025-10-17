@@ -12,10 +12,11 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * Note: Credentials (redmineUrl, redmineApiKey) are stored encrypted in database.
  * The repository handles encryption/decryption transparently.
+ *
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'user_credentials')]
-final class UserCredential
+class UserCredential
 {
     public function __construct(
         #[ORM\Id]
