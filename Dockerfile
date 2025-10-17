@@ -39,7 +39,7 @@ RUN mkdir -p var/cache var/log var && \
 
 # Run Symfony post-install scripts as root (needs write access)
 RUN composer dump-autoload --optimize && \
-    php bin/console cache:clear --env=prod --no-debug || true && \
+    php bin/console cache:clear --env=prod --no-debug && \
     chown -R app:app var/
 
 # Switch to non-root user
