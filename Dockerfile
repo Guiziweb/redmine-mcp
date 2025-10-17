@@ -1,4 +1,4 @@
-FROM php:8.3-cli-alpine
+FROM php:8.4-cli-alpine
 
 # Install system dependencies
 RUN apk add --no-cache \
@@ -48,5 +48,5 @@ USER app
 # Expose port (Render uses $PORT env var)
 EXPOSE ${PORT:-8080}
 
-# Start PHP built-in server (simple for Render)
+# Start PHP built-in server
 CMD php -S 0.0.0.0:${PORT:-8080} -t public/
