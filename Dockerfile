@@ -44,12 +44,12 @@ RUN mkdir -p var/cache var/log var /var/log/supervisor /run/nginx && \
 
 # Run Symfony post-install scripts
 RUN composer dump-autoload --optimize && \
-    php bin/console cache:clear --env=prod --no-debug && \
     chown -R www-data:www-data var/
 
 # Expose port
 EXPOSE 8080
 
-# Start: run migrations then start supervisor (which manages nginx + php-fpm)
-CMD php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration && \
+# Start: clear cache, run migrations, then start supervisor (which manages nginx + php-fpm)
+CMD php bin/console cache:clear --env=prod --no-debug && \
+    php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration && \
     /usr/bin/supervisord -c /etc/supervisord.conf
