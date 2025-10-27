@@ -40,6 +40,35 @@ final readonly class CurrentUserProviderService implements TimeTrackingProviderI
         return $this->providerFactory->createForUser($user->getCredential());
     }
 
+    /**
+     * Check if current user is authorized to query another user's data.
+     *
+     * @throws \RuntimeException if user is not authorized
+     */
+    private function assertCanQueryUser(?string $userId): void
+    {
+        if (null === $userId) {
+            return; // Querying own data is always allowed
+        }
+
+        $currentUser = $this->security->getUser();
+        if (!$currentUser instanceof User) {
+            throw new \RuntimeException('No authenticated user found');
+        }
+
+        // If querying own data, allow
+        if ($userId === $currentUser->getUserIdentifier()) {
+            return;
+        }
+
+        // Otherwise, require ROLE_ADMIN
+        if (!$this->security->isGranted('ROLE_ADMIN')) {
+            throw new \RuntimeException(
+                'Access denied: Only administrators can query other users\' data'
+            );
+        }
+    }
+
     public function getCapabilities(): \App\Domain\Provider\ProviderCapabilities
     {
         return $this->getCurrentProvider()->getCapabilities();
@@ -55,9 +84,11 @@ final readonly class CurrentUserProviderService implements TimeTrackingProviderI
         return $this->getCurrentProvider()->getProjects();
     }
 
-    public function getIssues(?int $projectId = null, int $limit = 50): array
+    public function getIssues(?int $projectId = null, int $limit = 50, ?string $userId = null): array
     {
-        return $this->getCurrentProvider()->getIssues($projectId, $limit);
+        $this->assertCanQueryUser($userId);
+
+        return $this->getCurrentProvider()->getIssues($projectId, $limit, $userId);
     }
 
     public function getIssue(int $issueId): \App\Domain\Model\Issue
@@ -83,7 +114,10 @@ final readonly class CurrentUserProviderService implements TimeTrackingProviderI
     public function getTimeEntries(
         \DateTimeInterface $from,
         \DateTimeInterface $to,
+        ?string $userId = null,
     ): array {
-        return $this->getCurrentProvider()->getTimeEntries($from, $to);
+        $this->assertCanQueryUser($userId);
+
+        return $this->getCurrentProvider()->getTimeEntries($from, $to, $userId);
     }
 }

@@ -17,22 +17,23 @@ final class ListIssuesTool
     }
 
     /**
-     * List issues assigned to current user from ONE specific project.
+     * List issues assigned to a user from ONE specific project.
      *
      * Use list_projects tool first to get the list of available projects,
      * then ASK THE USER which project they want to see issues for,
      * and call this tool with that single project_id.
      *
-     * @param int|null $project_id Filter by project ID (use list_projects tool to get valid project IDs)
-     * @param int      $limit      Maximum number of issues to return (default: 25)
+     * @param int|null    $project_id Filter by project ID (use list_projects tool to get valid project IDs)
+     * @param int         $limit      Maximum number of issues to return (default: 25)
+     * @param string|null $user_id    User ID to query (admin-only, null = current user)
      *
      * @return array<string, mixed>
      */
     #[McpTool(name: 'list_issues')]
-    public function listIssues(?int $project_id = null, int $limit = 25): array
+    public function listIssues(?int $project_id = null, int $limit = 25, ?string $user_id = null): array
     {
         try {
-            $issues = $this->provider->getIssues($project_id, $limit);
+            $issues = $this->provider->getIssues($project_id, $limit, $user_id);
 
             return [
                 'success' => true,

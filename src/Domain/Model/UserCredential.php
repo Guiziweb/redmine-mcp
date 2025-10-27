@@ -31,7 +31,18 @@ class UserCredential
 
         #[ORM\Column(type: 'datetime_immutable')]
         public ?\DateTimeInterface $createdAt = null,
+
+        #[ORM\Column(type: 'string', length: 50)]
+        public string $role = 'user',
+
+        #[ORM\Column(type: 'boolean')]
+        public bool $isBot = false,
     ) {
         $this->createdAt ??= new \DateTimeImmutable();
+    }
+
+    public function isAdmin(): bool
+    {
+        return 'admin' === $this->role;
     }
 }

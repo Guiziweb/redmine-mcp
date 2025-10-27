@@ -37,6 +37,8 @@ final class DoctrineUserCredentialRepository implements UserCredentialRepository
             redmineUrl: $decryptedUrl,
             redmineApiKey: $decryptedApiKey,
             createdAt: $credential->createdAt,
+            role: $credential->role,
+            isBot: $credential->isBot,
         );
     }
 
@@ -53,6 +55,8 @@ final class DoctrineUserCredentialRepository implements UserCredentialRepository
             // Update existing
             $existing->redmineUrl = $encryptedUrl;
             $existing->redmineApiKey = $encryptedApiKey;
+            $existing->role = $credential->role;
+            $existing->isBot = $credential->isBot;
         } else {
             // Create new
             $encrypted = new UserCredential(
@@ -60,6 +64,8 @@ final class DoctrineUserCredentialRepository implements UserCredentialRepository
                 redmineUrl: $encryptedUrl,
                 redmineApiKey: $encryptedApiKey,
                 createdAt: $credential->createdAt ?? new \DateTimeImmutable(),
+                role: $credential->role,
+                isBot: $credential->isBot,
             );
             $this->em->persist($encrypted);
         }

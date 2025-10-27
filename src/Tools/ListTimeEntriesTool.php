@@ -17,13 +17,14 @@ final class ListTimeEntriesTool
     }
 
     /**
-     * Get my time entries with optional date filtering and total calculation.
+     * Get time entries with optional date filtering and total calculation.
      *
      * Perfect for monthly time tracking and work hour analysis.
      * Returns daily, weekly, and project breakdowns.
      *
-     * @param string|null $from Start date (YYYY-MM-DD)
-     * @param string|null $to   End date (YYYY-MM-DD)
+     * @param string|null $from    Start date (YYYY-MM-DD)
+     * @param string|null $to      End date (YYYY-MM-DD)
+     * @param string|null $user_id User ID to query (admin-only, null = current user)
      *
      * @return array<string, mixed>
      */
@@ -31,6 +32,7 @@ final class ListTimeEntriesTool
     public function listTimeEntries(
         ?string $from = null,
         ?string $to = null,
+        ?string $user_id = null,
     ): array {
         try {
             // Parse dates
@@ -38,8 +40,8 @@ final class ListTimeEntriesTool
             $toDate = $to ? new \DateTime($to) : new \DateTime('today');
 
             // Get aggregated data
-            $byDay = $this->timeEntryService->getEntriesByDay($fromDate, $toDate);
-            $byProject = $this->timeEntryService->getEntriesByProject($fromDate, $toDate);
+            $byDay = $this->timeEntryService->getEntriesByDay($fromDate, $toDate, $user_id);
+            $byProject = $this->timeEntryService->getEntriesByProject($fromDate, $toDate, $user_id);
 
             // Calculate totals
             $totalHours = 0.0;

@@ -35,12 +35,13 @@ interface TimeTrackingProviderInterface
     /**
      * Get user's issues, optionally filtered by project.
      *
-     * @param int|null $projectId Project ID to filter by (optional)
-     * @param int      $limit     Maximum number of issues to return
+     * @param int|null    $projectId Project ID to filter by (optional)
+     * @param int         $limit     Maximum number of issues to return
+     * @param string|null $userId    User ID to query (admin-only, null = current user)
      *
      * @return Issue[]
      */
-    public function getIssues(?int $projectId = null, int $limit = 50): array;
+    public function getIssues(?int $projectId = null, int $limit = 50, ?string $userId = null): array;
 
     /**
      * Get a specific issue by ID.
@@ -74,10 +75,15 @@ interface TimeTrackingProviderInterface
     /**
      * Get user's time entries within a date range.
      *
+     * @param \DateTimeInterface $from   Start date
+     * @param \DateTimeInterface $to     End date
+     * @param string|null        $userId User ID to query (admin-only, null = current user)
+     *
      * @return TimeEntry[]
      */
     public function getTimeEntries(
         \DateTimeInterface $from,
         \DateTimeInterface $to,
+        ?string $userId = null,
     ): array;
 }

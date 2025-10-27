@@ -85,25 +85,35 @@ class TimeEntryService
     /**
      * Get time entries within a date range.
      *
+     * @param \DateTimeInterface $from   Start date
+     * @param \DateTimeInterface $to     End date
+     * @param string|null        $userId User ID to query (admin-only, null = current user)
+     *
      * @return TimeEntry[]
      */
     public function getTimeEntries(
         \DateTimeInterface $from,
         \DateTimeInterface $to,
+        ?string $userId = null,
     ): array {
-        return $this->provider->getTimeEntries($from, $to);
+        return $this->provider->getTimeEntries($from, $to, $userId);
     }
 
     /**
      * Get aggregated time entries by day.
+     *
+     * @param \DateTimeInterface $from   Start date
+     * @param \DateTimeInterface $to     End date
+     * @param string|null        $userId User ID to query (admin-only, null = current user)
      *
      * @return array<string, array{date: string, hours: float, entries: TimeEntry[]}>
      */
     public function getEntriesByDay(
         \DateTimeInterface $from,
         \DateTimeInterface $to,
+        ?string $userId = null,
     ): array {
-        $entries = $this->provider->getTimeEntries($from, $to);
+        $entries = $this->provider->getTimeEntries($from, $to, $userId);
 
         $byDay = [];
         foreach ($entries as $entry) {
@@ -129,13 +139,18 @@ class TimeEntryService
     /**
      * Get aggregated time entries by project.
      *
+     * @param \DateTimeInterface $from   Start date
+     * @param \DateTimeInterface $to     End date
+     * @param string|null        $userId User ID to query (admin-only, null = current user)
+     *
      * @return array<int, array{project_id: int, project_name: string, hours: float, entries: TimeEntry[]}>
      */
     public function getEntriesByProject(
         \DateTimeInterface $from,
         \DateTimeInterface $to,
+        ?string $userId = null,
     ): array {
-        $entries = $this->provider->getTimeEntries($from, $to);
+        $entries = $this->provider->getTimeEntries($from, $to, $userId);
 
         $byProject = [];
         foreach ($entries as $entry) {

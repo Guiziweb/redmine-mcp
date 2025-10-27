@@ -36,10 +36,10 @@ final class OAuthController extends AbstractController
     #[Route('/.well-known/oauth-protected-resource', name: 'oauth_metadata', methods: ['GET'])]
     public function metadata(Request $request): JsonResponse
     {
-        // Use X-Forwarded-Proto header from ngrok/reverse proxy
-        $scheme = $request->headers->get('X-Forwarded-Proto', $request->getScheme());
-        $host = $request->getHost();
-        $baseUrl = $scheme.'://'.$host;
+        // Use X-Forwarded headers from proxy, or full scheme+host+port from request
+        $baseUrl = $request->headers->get('X-Forwarded-Proto')
+            ? $request->headers->get('X-Forwarded-Proto').'://'.$request->getHost()
+            : $request->getSchemeAndHttpHost();
 
         return new JsonResponse([
             'resource' => $baseUrl.'/mcp',
@@ -56,10 +56,10 @@ final class OAuthController extends AbstractController
     #[Route('/.well-known/oauth-authorization-server', name: 'oauth_authorization_server_metadata', methods: ['GET'])]
     public function authorizationServerMetadata(Request $request): JsonResponse
     {
-        // Use X-Forwarded-Proto header from ngrok/reverse proxy
-        $scheme = $request->headers->get('X-Forwarded-Proto', $request->getScheme());
-        $host = $request->getHost();
-        $baseUrl = $scheme.'://'.$host;
+        // Use X-Forwarded headers from proxy, or full scheme+host+port from request
+        $baseUrl = $request->headers->get('X-Forwarded-Proto')
+            ? $request->headers->get('X-Forwarded-Proto').'://'.$request->getHost()
+            : $request->getSchemeAndHttpHost();
 
         return new JsonResponse([
             'issuer' => $baseUrl,
@@ -87,10 +87,10 @@ final class OAuthController extends AbstractController
         $clientId = 'mcp-'.bin2hex(random_bytes(16));
         $clientSecret = bin2hex(random_bytes(32));
 
-        // Get base URL for response
-        $scheme = $request->headers->get('X-Forwarded-Proto', $request->getScheme());
-        $host = $request->getHost();
-        $baseUrl = $scheme.'://'.$host;
+        // Use X-Forwarded headers from proxy, or full scheme+host+port from request
+        $baseUrl = $request->headers->get('X-Forwarded-Proto')
+            ? $request->headers->get('X-Forwarded-Proto').'://'.$request->getHost()
+            : $request->getSchemeAndHttpHost();
 
         // Return client registration response (RFC 7591)
         return new JsonResponse([
@@ -289,10 +289,20 @@ final class OAuthController extends AbstractController
             return new JsonResponse(['error' => 'invalid_grant', 'error_description' => 'Redirect URI mismatch'], 400);
         }
 
-        // Generate JWT access token
+        // Get user credential to include role in JWT
+        $credential = $this->credentialRepository->find($authData['user_id']);
+        if (null === $credential) {
+            return new JsonResponse(['error' => 'invalid_grant', 'error_description' => 'User not found'], 400);
+        }
+
+        // Generate JWT access token with role claim
         $accessToken = $this->tokenValidator->createToken(
             userId: $authData['user_id'],
             expiresIn: 86400, // 24 hours
+            extraClaims: [
+                'role' => $credential->role,
+                'is_bot' => $credential->isBot,
+            ]
         );
 
         return new JsonResponse([

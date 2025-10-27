@@ -31,17 +31,9 @@ final class McpController extends AbstractController
     ) {
     }
 
-    #[Route('/mcp', name: 'mcp_endpoint', methods: ['GET', 'POST', 'DELETE', 'OPTIONS'])]
+    #[Route('/mcp', name: 'mcp_endpoint', methods: ['GET', 'POST', 'DELETE'])]
     public function handle(Request $request): Response
     {
-        // Handle OPTIONS preflight for CORS
-        if ($request->isMethod('OPTIONS')) {
-            return new Response('', 204, [
-                'Access-Control-Allow-Origin' => '*',
-                'Access-Control-Allow-Methods' => 'GET, POST, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers' => 'Content-Type, Mcp-Session-Id, Authorization, Accept',
-            ]);
-        }
 
         // Get authenticated user (Symfony Security handles JWT validation)
         $user = $this->getUser();

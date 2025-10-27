@@ -69,12 +69,12 @@ class RedmineProvider implements TimeTrackingProviderInterface
         );
     }
 
-    public function getIssues(?int $projectId = null, int $limit = 50): array
+    public function getIssues(?int $projectId = null, int $limit = 50, ?string $userId = null): array
     {
         $user = $this->getCurrentUser();
 
         $params = [
-            'assigned_to_id' => $user->id,
+            'assigned_to_id' => $userId ?? $user->id,
             'limit' => $limit,
             'status_id' => 'open',
         ];
@@ -176,11 +176,12 @@ class RedmineProvider implements TimeTrackingProviderInterface
     public function getTimeEntries(
         \DateTimeInterface $from,
         \DateTimeInterface $to,
+        ?string $userId = null,
     ): array {
         $user = $this->getCurrentUser();
 
         $params = [
-            'user_id' => $user->id,
+            'user_id' => $userId ?? $user->id,
             'from' => $from->format('Y-m-d'),
             'to' => $to->format('Y-m-d'),
             'limit' => 1000,

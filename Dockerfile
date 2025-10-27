@@ -1,4 +1,4 @@
-FROM php:8.4-cli-alpine
+FROM php:8.4-fpm-alpine
 
 # Install system dependencies
 RUN apk add --no-cache \
@@ -13,6 +13,10 @@ RUN apk add --no-cache \
 RUN docker-php-ext-install \
     sodium \
     pdo_pgsql
+
+# Configure PHP-FPM to listen on TCP instead of socket
+RUN sed -i 's/listen = \/run\/php\/php8.4-fpm.sock/listen = 127.0.0.1:9000/' /usr/local/etc/php-fpm.d/www.conf || \
+    echo "listen = 127.0.0.1:9000" >> /usr/local/etc/php-fpm.d/www.conf
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -29,27 +33,23 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 # Copy application files
 COPY . .
 
-# Create non-root user in group 1000 (required by Render for secrets access)
-RUN apk add shadow && \
-    addgroup -g 1000 app && \
-    adduser -D -u 1000 -G app app
+# Copy nginx and supervisor configurations
+COPY docker/nginx/nginx.conf /etc/nginx/http.d/default.conf
+COPY docker/supervisor/supervisord.conf /etc/supervisord.conf
 
 # Create required directories and set permissions
-RUN mkdir -p var/cache var/log var && \
-    chown -R app:app /app && \
+RUN mkdir -p var/cache var/log var /var/log/supervisor /run/nginx && \
+    chown -R www-data:www-data /app /var/log/nginx /run/nginx && \
     chmod -R 775 var/
 
-# Run Symfony post-install scripts as root (needs write access)
+# Run Symfony post-install scripts
 RUN composer dump-autoload --optimize && \
     php bin/console cache:clear --env=prod --no-debug && \
-    chown -R app:app var/
+    chown -R www-data:www-data var/
 
-# Switch to non-root user
-USER app
+# Expose port
+EXPOSE 8080
 
-# Expose port (Render uses $PORT env var)
-EXPOSE ${PORT:-8080}
-
-# Start: run migrations then start server
+# Start: run migrations then start supervisor (which manages nginx + php-fpm)
 CMD php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration && \
-    php -S 0.0.0.0:${PORT:-8080} -t public/
+    /usr/bin/supervisord -c /etc/supervisord.conf

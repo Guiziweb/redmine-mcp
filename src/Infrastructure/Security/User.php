@@ -39,8 +39,13 @@ final readonly class User implements UserInterface
      */
     public function getRoles(): array
     {
-        // All authenticated users have ROLE_USER
-        return ['ROLE_USER'];
+        $roles = ['ROLE_USER'];
+
+        if ($this->credential->isAdmin()) {
+            $roles[] = 'ROLE_ADMIN';
+        }
+
+        return $roles;
     }
 
     #[\Deprecated]
