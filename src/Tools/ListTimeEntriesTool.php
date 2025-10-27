@@ -24,7 +24,7 @@ final class ListTimeEntriesTool
      *
      * @param string|null $from    Start date (YYYY-MM-DD)
      * @param string|null $to      End date (YYYY-MM-DD)
-     * @param string|null $user_id User ID to query (admin-only, null = current user)
+     * @param int|null    $user_id Redmine user ID to query (admin-only, null = current user)
      *
      * @return array<string, mixed>
      */
@@ -32,7 +32,7 @@ final class ListTimeEntriesTool
     public function listTimeEntries(
         ?string $from = null,
         ?string $to = null,
-        ?string $user_id = null,
+        ?int $user_id = null,
     ): array {
         try {
             // Parse dates

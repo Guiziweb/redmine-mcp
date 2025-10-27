@@ -8,6 +8,7 @@ use App\Domain\Provider\TimeTrackingProviderInterface;
 use App\Infrastructure\Redmine\UserRedmineProviderFactory;
 use App\Infrastructure\Security\User;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * Provides the TimeTrackingProvider for the current authenticated user.
@@ -43,29 +44,17 @@ final readonly class CurrentUserProviderService implements TimeTrackingProviderI
     /**
      * Check if current user is authorized to query another user's data.
      *
-     * @throws \RuntimeException if user is not authorized
+     * @throws AccessDeniedException if user is not authorized
      */
-    private function assertCanQueryUser(?string $userId): void
+    private function assertCanQueryUser(?int $userId): void
     {
         if (null === $userId) {
             return; // Querying own data is always allowed
         }
 
-        $currentUser = $this->security->getUser();
-        if (!$currentUser instanceof User) {
-            throw new \RuntimeException('No authenticated user found');
-        }
-
-        // If querying own data, allow
-        if ($userId === $currentUser->getUserIdentifier()) {
-            return;
-        }
-
-        // Otherwise, require ROLE_ADMIN
+        // Require ROLE_ADMIN for cross-user queries
         if (!$this->security->isGranted('ROLE_ADMIN')) {
-            throw new \RuntimeException(
-                'Access denied: Only administrators can query other users\' data'
-            );
+            throw new AccessDeniedException('Access denied: Only administrators can specify a user_id parameter');
         }
     }
 
@@ -84,7 +73,7 @@ final readonly class CurrentUserProviderService implements TimeTrackingProviderI
         return $this->getCurrentProvider()->getProjects();
     }
 
-    public function getIssues(?int $projectId = null, int $limit = 50, ?string $userId = null): array
+    public function getIssues(?int $projectId = null, int $limit = 50, ?int $userId = null): array
     {
         $this->assertCanQueryUser($userId);
 
@@ -114,7 +103,7 @@ final readonly class CurrentUserProviderService implements TimeTrackingProviderI
     public function getTimeEntries(
         \DateTimeInterface $from,
         \DateTimeInterface $to,
-        ?string $userId = null,
+        ?int $userId = null,
     ): array {
         $this->assertCanQueryUser($userId);
 

@@ -34,7 +34,6 @@ final class McpController extends AbstractController
     #[Route('/mcp', name: 'mcp_endpoint', methods: ['GET', 'POST', 'DELETE'])]
     public function handle(Request $request): Response
     {
-
         // Get authenticated user (Symfony Security handles JWT validation)
         $user = $this->getUser();
         if (!$user instanceof User) {

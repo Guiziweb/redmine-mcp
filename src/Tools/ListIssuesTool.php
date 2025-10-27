@@ -23,14 +23,14 @@ final class ListIssuesTool
      * then ASK THE USER which project they want to see issues for,
      * and call this tool with that single project_id.
      *
-     * @param int|null    $project_id Filter by project ID (use list_projects tool to get valid project IDs)
-     * @param int         $limit      Maximum number of issues to return (default: 25)
-     * @param string|null $user_id    User ID to query (admin-only, null = current user)
+     * @param int|null $project_id Filter by project ID (use list_projects tool to get valid project IDs)
+     * @param int      $limit      Maximum number of issues to return (default: 25)
+     * @param int|null $user_id    Redmine user ID to query (admin-only, null = current user)
      *
      * @return array<string, mixed>
      */
     #[McpTool(name: 'list_issues')]
-    public function listIssues(?int $project_id = null, int $limit = 25, ?string $user_id = null): array
+    public function listIssues(?int $project_id = null, int $limit = 25, ?int $user_id = null): array
     {
         try {
             $issues = $this->provider->getIssues($project_id, $limit, $user_id);
