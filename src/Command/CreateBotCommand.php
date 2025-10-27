@@ -59,7 +59,7 @@ class CreateBotCommand extends Command
             $io->warning(sprintf('User "%s" already exists. Updating credentials and generating new token.', $email));
 
             // Load existing credential
-            $credential = $this->credentialRepository->find($email);
+            $credential = $this->credentialRepository->findByUserId($email);
             $credential->redmineUrl = rtrim($redmineUrl, '/');
             $credential->redmineApiKey = $redmineApiKey;
             $credential->role = 'admin';
