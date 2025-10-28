@@ -290,7 +290,7 @@ final class OAuthController extends AbstractController
         }
 
         // Get user credential to include role in JWT
-        $credential = $this->credentialRepository->find($authData['user_id']);
+        $credential = $this->credentialRepository->findByUserId($authData['user_id']);
         if (null === $credential) {
             return new JsonResponse(['error' => 'invalid_grant', 'error_description' => 'User not found'], 400);
         }
