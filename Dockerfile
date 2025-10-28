@@ -52,4 +52,5 @@ EXPOSE 8080
 # Start: clear cache, run migrations, then start supervisor (which manages nginx + php-fpm)
 CMD php bin/console cache:clear --env=prod --no-debug && \
     php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration && \
+    chown -R www-data:www-data /app/var && \
     /usr/bin/supervisord -c /etc/supervisord.conf
